@@ -183,3 +183,72 @@ func (c *Client) GetInstance(name string) (*Instance, error) {
 
 	return &instance, nil
 }
+
+// StartInstance starts a stopped instance
+func (c *Client) StartInstance(name string) error {
+	endpoint := fmt.Sprintf("/api/v1/instances/%s/start", name)
+	resp, err := c.makeRequest("POST", endpoint, nil)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusAccepted {
+		return c.handleErrorResponse(resp)
+	}
+
+	return nil
+}
+
+// StopInstance stops a running instance
+func (c *Client) StopInstance(name string) error {
+	endpoint := fmt.Sprintf("/api/v1/instances/%s/stop", name)
+	resp, err := c.makeRequest("POST", endpoint, nil)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusAccepted {
+		return c.handleErrorResponse(resp)
+	}
+
+	return nil
+}
+
+// RestartInstance restarts an instance
+func (c *Client) RestartInstance(name string) error {
+	endpoint := fmt.Sprintf("/api/v1/instances/%s/restart", name)
+	resp, err := c.makeRequest("POST", endpoint, nil)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusAccepted {
+		return c.handleErrorResponse(resp)
+	}
+
+	return nil
+}
+
+// GetLogs retrieves logs for an instance
+func (c *Client) GetLogs(name string, lines int) (string, error) {
+	endpoint := fmt.Sprintf("/api/v1/instances/%s/logs?lines=%d", name, lines)
+	resp, err := c.makeRequest("GET", endpoint, nil)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return "", c.handleErrorResponse(resp)
+	}
+
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("failed to read logs: %w", err)
+	}
+
+	return string(bodyBytes), nil
+}
