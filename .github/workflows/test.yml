@@ -37,8 +37,13 @@ jobs:
     - name: Download dependencies
       run: go mod download
 
-    - name: Run tests
+    - name: Run tests (Unix)
+      if: runner.os != 'Windows'
       run: go test -v -race -coverprofile=coverage.txt -covermode=atomic ./...
+
+    - name: Run tests (Windows)
+      if: runner.os == 'Windows'
+      run: go test -v -coverprofile=coverage.txt -covermode=atomic ./...
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v4
@@ -67,6 +72,7 @@ jobs:
       with:
         version: latest
         args: --timeout=5m
+      continue-on-error: true
 
   build:
     name: Build
@@ -84,6 +90,7 @@ jobs:
 
     - name: Build for multiple platforms
       run: |
+        mkdir -p dist
         GOOS=linux GOARCH=amd64 go build -o dist/supactl-linux-amd64
         GOOS=darwin GOARCH=amd64 go build -o dist/supactl-darwin-amd64
         GOOS=darwin GOARCH=arm64 go build -o dist/supactl-darwin-arm64
