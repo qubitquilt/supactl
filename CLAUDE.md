@@ -4,14 +4,20 @@ This document provides comprehensive context about the **supactl** project for A
 
 ## Project Overview
 
-**supactl** is a command-line interface (CLI) tool for managing self-hosted Supabase instances via a central SupaControl management server. The repository also includes `supascale.sh`, a standalone bash script for direct local management.
+**supactl** is a unified command-line interface (CLI) tool for managing self-hosted Supabase instances in two modes:
+
+1. **Remote Mode**: Centralized management via a SupaControl server
+2. **Local Mode**: Direct Docker-based management on local machine
+
+The repository also includes `supascale.sh`, a legacy bash script now superseded by `supactl local`.
 
 ### Core Purpose
 
-- Enable centralized management of multiple Supabase instances across different servers
+- **Remote Mode**: Enable centralized management of multiple Supabase instances across different servers
+- **Local Mode**: Provide standalone local instance management without requiring a server
 - Provide a user-friendly CLI with interactive prompts and clear error messages
-- Support local development workflows by linking project directories to remote instances
-- Maintain security through encrypted credential storage and API key authentication
+- Support local development workflows (remote linking and direct local management)
+- Maintain security through encrypted credential storage and secure secret generation
 
 ## Repository Structure
 
@@ -19,18 +25,24 @@ This document provides comprehensive context about the **supactl** project for A
 supactl/
 ├── cmd/                      # Cobra command implementations
 │   ├── root.go              # Root command and shared utilities
-│   ├── login.go             # Authentication: login to SupaControl server
-│   ├── logout.go            # Authentication: logout/clear credentials
-│   ├── create.go            # Instance management: create new instance
-│   ├── delete.go            # Instance management: delete instance
-│   ├── list.go              # Instance management: list all instances
-│   ├── start.go             # Lifecycle: start stopped instance
-│   ├── stop.go              # Lifecycle: stop running instance
-│   ├── restart.go           # Lifecycle: restart instance
-│   ├── logs.go              # Debugging: view instance logs
-│   ├── link.go              # Local dev: link directory to instance
-│   ├── unlink.go            # Local dev: unlink directory
-│   ├── status.go            # Local dev: show linked instance details
+│   ├── login.go             # Remote: login to SupaControl server
+│   ├── logout.go            # Remote: logout/clear credentials
+│   ├── create.go            # Remote: create new instance
+│   ├── delete.go            # Remote: delete instance
+│   ├── list.go              # Remote: list all instances
+│   ├── start.go             # Remote: start stopped instance
+│   ├── stop.go              # Remote: stop running instance
+│   ├── restart.go           # Remote: restart instance
+│   ├── logs.go              # Remote: view instance logs
+│   ├── link.go              # Remote: link directory to instance
+│   ├── unlink.go            # Remote: unlink directory
+│   ├── status.go            # Remote: show linked instance details
+│   ├── local.go             # Local: parent command
+│   ├── local_add.go         # Local: create new local instance
+│   ├── local_list.go        # Local: list all local instances
+│   ├── local_start.go       # Local: start local instance
+│   ├── local_stop.go        # Local: stop local instance
+│   ├── local_remove.go      # Local: remove local instance
 │   └── *_test.go            # Command tests
 ├── internal/                 # Internal packages (not for import)
 │   ├── api/                 # API client for SupaControl server
@@ -40,9 +52,17 @@ supactl/
 │   ├── auth/                # Authentication and config management
 │   │   ├── config.go        # Config file I/O, credential storage
 │   │   └── *_test.go        # Auth tests
-│   ├── link/                # Local project linking
+│   ├── link/                # Local project linking (remote mode)
 │   │   ├── link.go          # .supacontrol/project file management
 │   │   └── *_test.go        # Link tests
+│   ├── local/               # Local instance management
+│   │   ├── types.go         # Data structures for projects, ports, database
+│   │   ├── config.go        # Database file management
+│   │   ├── secrets.go       # Password and JWT token generation
+│   │   ├── files.go         # Configuration file modification
+│   │   ├── docker.go        # Docker Compose operations
+│   │   ├── supabase.go      # Project setup orchestration
+│   │   └── *_test.go        # Local package tests
 │   └── testutil/            # Shared test utilities
 ├── scripts/                  # Installation and utility scripts
 │   ├── install.sh           # One-line installation script
@@ -126,6 +146,58 @@ your-project/
 - Automatically adds `.supacontrol/` to `.gitignore` if present
 - Used by `status` command to show details of linked project
 - Allows directory-based context instead of specifying project names repeatedly
+
+### Local Instance Management
+
+**Location**: `internal/local/`
+
+The local management package allows direct Docker-based management of Supabase instances without requiring a SupaControl server. This functionality consolidates and supersedes the legacy `supascale.sh` bash script.
+
+**Package Structure**:
+- `types.go`: Data structures for projects, ports, and database
+- `config.go`: Database file management (`~/.supascale_database.json`)
+- `secrets.go`: Secure password and JWT token generation
+- `files.go`: Configuration file modification (.env, docker-compose.yml, config.toml)
+- `docker.go`: Docker Compose operation wrappers
+- `supabase.go`: High-level project setup orchestration
+
+**Key Features**:
+- **Port Allocation**: Automatic unique port assignment (base 54321 + 1000 increments per project)
+- **Secrets Generation**: Cryptographically secure passwords and HS256 JWT tokens
+- **Container Naming**: Project-specific Docker container names to avoid conflicts
+- **File Modification**: Automated updates to .env, docker-compose.yml, and config.toml
+- **Database Storage**: JSON database at `~/.supascale_database.json` with 0600 permissions
+
+**Commands**:
+- `supactl local add <project-id>`: Clone Supabase repo, generate secrets, configure Docker
+- `supactl local list`: Display all local projects and their ports
+- `supactl local start <project-id>`: Start Docker Compose services
+- `supactl local stop <project-id>`: Stop and clean up Docker resources
+- `supactl local remove <project-id>`: Remove from database (doesn't delete files)
+
+**Port Assignments** (for base port 54321):
+- API: 54321
+- DB: 54322 (54321 + 1)
+- Shadow DB: 54320 (54321 - 1)
+- Studio: 54323 (54321 + 2)
+- Inbucket: 54324 (54321 + 3)
+- SMTP: 54325 (54321 + 4)
+- POP3: 54326 (54321 + 5)
+- Analytics: 54327 (54321 + 6)
+- Pooler: 54329 (54321 + 8)
+- Kong HTTPS: 54764 (54321 + 443)
+
+**Project Validation**:
+- Must start with a letter or number
+- Can contain lowercase letters, numbers, hyphens, and underscores
+- Regex: `^[a-z0-9][a-z0-9_-]*$`
+
+**Design Decisions**:
+- Uses Go's `crypto/rand` for secure secret generation (not `math/rand`)
+- JWT tokens signed with HS256 (HMAC-SHA256)
+- Compatible with existing `supascale.sh` database format for migration
+- Cross-platform support (Linux, macOS, Windows)
+- Comprehensive error handling with user-friendly messages
 
 ## Code Conventions
 
