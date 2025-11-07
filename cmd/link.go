@@ -5,8 +5,8 @@ import (
 	"os"
 
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/spf13/cobra"
 	"github.com/qubitquilt/supactl/internal/link"
+	"github.com/spf13/cobra"
 )
 
 // linkCmd represents the link command

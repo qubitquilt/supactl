@@ -6,9 +6,9 @@ import (
 	"strings"
 
 	"github.com/AlecAivazis/survey/v2"
-	"github.com/spf13/cobra"
 	"github.com/qubitquilt/supactl/internal/api"
 	"github.com/qubitquilt/supactl/internal/auth"
+	"github.com/spf13/cobra"
 )
 
 // loginCmd represents the login command

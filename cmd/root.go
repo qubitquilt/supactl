@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/spf13/cobra"
 	"github.com/qubitquilt/supactl/internal/api"
 	"github.com/qubitquilt/supactl/internal/auth"
+	"github.com/spf13/cobra"
 )
 
 var (
