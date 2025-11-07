@@ -3,6 +3,7 @@ package local
 import (
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 )
 
@@ -83,7 +84,7 @@ func TestSaveAndLoadDatabase(t *testing.T) {
 
 func TestDatabaseFilePermissions(t *testing.T) {
 	// Skip on Windows as permissions work differently
-	if os.Getenv("GOOS") == "windows" {
+	if runtime.GOOS == "windows" {
 		t.Skip("Skipping permission test on Windows")
 	}
 
