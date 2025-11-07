@@ -79,7 +79,7 @@ supactl/
 ├── README.md                 # User-facing documentation
 ├── SUPACTL_README.md        # Detailed CLI documentation
 ├── CONTRIBUTING.md          # Contributor guidelines
-├── LICENSE                   # GPL v3 license
+├── LICENSE                   # MIT license
 ├── supascale.sh             # Standalone bash management script
 └── CLAUDE.md                # This file
 
@@ -485,10 +485,10 @@ func init() {
 
 ## License
 
-GPL v3 - See LICENSE file for full text. Copyright (c) 2025 Frog Byte, LLC.
+MIT License - See LICENSE file for full text. Copyright (c) 2025 Qubit Quilt.
 
 ---
 
 **Last Updated**: 2025-11-07
 **Version**: 1.0.0
-**Maintained By**: Frog Byte, LLC
+**Maintained By**: Qubit Quilt

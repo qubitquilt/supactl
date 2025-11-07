@@ -2,11 +2,11 @@
 
 ################################################################################
 # Supascale
-# Original Development: Frog Byte, LLC - https://www.frogbyte.co
+# Original Development: Qubit Quilt
 #
-# GPL V3 License
+# MIT License
 #
-# Copyright (c) 2025 Frog Byte, LLC
+# Copyright (c) 2025 Qubit Quilt
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
