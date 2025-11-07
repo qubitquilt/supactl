@@ -404,4 +404,31 @@ See [LICENSE](LICENSE) for full details.
 
 - Original development by Frog Byte, LLC
 - Built on top of [Supabase](https://supabase.com/)
-- CLI framework powered by [Cobra](https://github.com/spf13/cobra) 
+- CLI framework powered by [Cobra](https://github.com/spf13/cobra)
+
+## 💬 Support & Community
+
+- **Issues**: [GitHub Issues](https://github.com/yourusername/supactl/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/yourusername/supactl/discussions)
+- **Documentation**: See [SUPACTL_README.md](SUPACTL_README.md) for detailed CLI docs
+
+## 🗺️ Roadmap
+
+- [ ] Web UI for instance management
+- [ ] Instance templates and presets
+- [ ] Automated backups and restoration
+- [ ] Multi-region support
+- [ ] Instance monitoring and alerts
+- [ ] Database migration tools
+- [ ] Team collaboration features
+
+## ⚡ Performance
+
+- **Fast**: Single binary with minimal overhead
+- **Lightweight**: ~10MB binary size
+- **Efficient**: Concurrent API requests where possible
+- **Reliable**: Comprehensive error handling and retry logic
+
+---
+
+<p align="center">Made with ❤️ by <a href="https://frogbyte.com">Frog Byte, LLC</a></p> 
