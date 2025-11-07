@@ -485,10 +485,10 @@ func init() {
 
 ## License
 
-MIT License - See LICENSE file for full text. Copyright (c) 2025 Frog Byte, LLC.
+MIT License - See LICENSE file for full text. Copyright (c) 2025 Qubit Quilt.
 
 ---
 
 **Last Updated**: 2025-11-07
 **Version**: 1.0.0
-**Maintained By**: Frog Byte, LLC
+**Maintained By**: Qubit Quilt
