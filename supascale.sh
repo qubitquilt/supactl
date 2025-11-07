@@ -4,7 +4,7 @@
 # Supascale
 # Original Development: Frog Byte, LLC - https://www.frogbyte.co
 #
-# GPL V3 License
+# MIT License
 #
 # Copyright (c) 2025 Frog Byte, LLC
 #

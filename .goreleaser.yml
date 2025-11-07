@@ -111,7 +111,7 @@ brews:
     directory: Formula
     homepage: https://github.com/qubitquilt/supactl
     description: "CLI for managing self-hosted Supabase instances"
-    license: "GPL-3.0-or-later"
+    license: "MIT"
     install: |
       bin.install "supactl"
     test: |

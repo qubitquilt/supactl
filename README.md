@@ -6,7 +6,7 @@ A comprehensive toolkit for managing self-hosted Supabase instances.
 
 [![Test](https://img.shields.io/github/actions/workflow/status/qubitquilt/supactl/test.yml?style=for-the-badge&label=tests)](https://github.com/qubitquilt/supactl/actions)
 [![Go Report Card](https://goreportcard.com/badge/github.com/qubitquilt/supactl?style=for-the-badge)](https://goreportcard.com/report/github.com/qubitquilt/supactl)
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg?style=for-the-badge)](https://www.gnu.org/licenses/gpl-3.0)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 [![GitHub release](https://img.shields.io/github/v/release/qubitquilt/supactl?style=for-the-badge)](https://github.com/qubitquilt/supactl/releases)
 
 ## Built With
@@ -439,9 +439,9 @@ make build
 
 ## 📄 License
 
-GPL V3 License - Copyright (c) 2025 Frog Byte, LLC
+MIT License - Copyright (c) 2025 Frog Byte, LLC
 
-This program is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the conditions in the MIT License.
 
 See [LICENSE](LICENSE) for full details.
 

@@ -391,7 +391,7 @@ Contributions are welcome! Please follow these guidelines:
 
 ## License
 
-GPL V3 License - Copyright (c) 2025 Frog Byte, LLC
+MIT License - Copyright (c) 2025 Frog Byte, LLC
 
 ## Acknowledgments
 
