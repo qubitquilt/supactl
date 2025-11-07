@@ -1,28 +1,36 @@
 package local
 
 import (
-	"crypto/hmac"
 	"crypto/rand"
-	"crypto/sha256"
 	"encoding/base64"
-	"encoding/json"
 	"fmt"
-	"strings"
 	"time"
+
+	"github.com/golang-jwt/jwt/v5"
 )
 
 // GeneratePassword generates a secure random password of the specified length
+// Uses base64 encoding to ensure uniform distribution of random values
 func GeneratePassword(length int) (string, error) {
-	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-	b := make([]byte, length)
+	// Calculate number of random bytes needed
+	// base64 encoding produces ~4/3 the output length, so we need ~3/4 input bytes
+	numBytes := (length * 3) / 4
+	if numBytes == 0 {
+		numBytes = 1
+	}
+
+	b := make([]byte, numBytes)
 	if _, err := rand.Read(b); err != nil {
 		return "", fmt.Errorf("failed to generate random bytes: %w", err)
 	}
 
-	for i := range b {
-		b[i] = charset[int(b[i])%len(charset)]
+	// Encode to base64 and trim to desired length
+	encoded := base64.RawURLEncoding.EncodeToString(b)
+	if len(encoded) > length {
+		encoded = encoded[:length]
 	}
-	return string(b), nil
+
+	return encoded, nil
 }
 
 // GenerateEncryptionKey generates a secure random encryption key (32 bytes for AES-256)
@@ -30,69 +38,32 @@ func GenerateEncryptionKey() (string, error) {
 	return GeneratePassword(32)
 }
 
-// base64URLEncode encodes data to base64 URL format (no padding)
-func base64URLEncode(data []byte) string {
-	encoded := base64.RawURLEncoding.EncodeToString(data)
-	return strings.TrimRight(encoded, "=")
-}
-
-// JWTHeader represents the JWT header
-type JWTHeader struct {
-	Alg string `json:"alg"`
-	Typ string `json:"typ"`
-}
-
-// JWTPayload represents the JWT payload
-type JWTPayload struct {
-	Aud string `json:"aud"`
-	Exp int64  `json:"exp"`
-	Iat int64  `json:"iat"`
-	Iss string `json:"iss"`
-	Ref string `json:"ref"`
-	Role string `json:"role"`
-	Sub string `json:"sub"`
-}
-
-// GenerateJWT generates a JWT token using HS256 algorithm
+// GenerateJWT generates a JWT token using HS256 algorithm with the golang-jwt library
 func GenerateJWT(jwtSecret, role string) (string, error) {
-	// Create header
-	header := JWTHeader{
-		Alg: "HS256",
-		Typ: "JWT",
+	now := time.Now()
+	exp := now.Add(10 * 365 * 24 * time.Hour) // 10 years from now
+
+	// Create claims
+	claims := jwt.MapClaims{
+		"aud":  "authenticated",
+		"exp":  exp.Unix(),
+		"iat":  now.Unix(),
+		"iss":  "supabase",
+		"ref":  "localhost",
+		"role": role,
+		"sub":  "1234567890",
 	}
-	headerJSON, err := json.Marshal(header)
+
+	// Create token with HS256 signing method
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	// Sign the token with the secret
+	tokenString, err := token.SignedString([]byte(jwtSecret))
 	if err != nil {
-		return "", fmt.Errorf("failed to marshal header: %w", err)
+		return "", fmt.Errorf("failed to sign JWT: %w", err)
 	}
-	headerEncoded := base64URLEncode(headerJSON)
 
-	// Create payload
-	now := time.Now().Unix()
-	exp := now + (315360000) // 10 years from now
-	payload := JWTPayload{
-		Aud:  "authenticated",
-		Exp:  exp,
-		Iat:  now,
-		Iss:  "supabase",
-		Ref:  "localhost",
-		Role: role,
-		Sub:  "1234567890",
-	}
-	payloadJSON, err := json.Marshal(payload)
-	if err != nil {
-		return "", fmt.Errorf("failed to marshal payload: %w", err)
-	}
-	payloadEncoded := base64URLEncode(payloadJSON)
-
-	// Create signature
-	signatureInput := headerEncoded + "." + payloadEncoded
-	h := hmac.New(sha256.New, []byte(jwtSecret))
-	h.Write([]byte(signatureInput))
-	signature := base64URLEncode(h.Sum(nil))
-
-	// Combine all parts
-	token := signatureInput + "." + signature
-	return token, nil
+	return tokenString, nil
 }
 
 // Secrets holds all generated secrets for a Supabase instance

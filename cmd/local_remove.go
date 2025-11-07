@@ -29,10 +29,17 @@ Example:
 		projectID := args[0]
 
 		// Check Docker requirements
-		checkDockerRequirements()
+		if err := checkDockerRequirements(); err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			os.Exit(1)
+		}
 
 		// Load database
-		db := getLocalDatabase()
+		db, err := getLocalDatabase()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			os.Exit(1)
+		}
 
 		// Get project to ensure it exists
 		project, err := db.GetProject(projectID)

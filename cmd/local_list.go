@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/spf13/cobra"
 )
@@ -15,7 +16,11 @@ and directory locations.
 Example:
   supactl local list`,
 	Run: func(cmd *cobra.Command, args []string) {
-		db := getLocalDatabase()
+		db, err := getLocalDatabase()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			os.Exit(1)
+		}
 
 		if len(db.Projects) == 0 {
 			fmt.Println("No local projects configured yet.")

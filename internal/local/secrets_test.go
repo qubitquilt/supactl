@@ -15,10 +15,11 @@ func TestGeneratePassword(t *testing.T) {
 		t.Errorf("Expected password length 40, got %d", len(password))
 	}
 
-	// Verify it contains only alphanumeric characters
+	// Verify it contains only base64 URL-safe characters (alphanumeric, -, _)
 	for _, c := range password {
-		if !((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9')) {
-			t.Errorf("Password contains non-alphanumeric character: %c", c)
+		isValid := (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') || c == '-' || c == '_'
+		if !isValid {
+			t.Errorf("Password contains invalid character for base64 URL encoding: %c", c)
 		}
 	}
 }
@@ -152,20 +153,5 @@ func TestGenerateSecrets(t *testing.T) {
 			t.Error("Duplicate secret value found")
 		}
 		uniqueMap[val] = true
-	}
-}
-
-func TestBase64URLEncode(t *testing.T) {
-	input := []byte("hello world")
-	encoded := base64URLEncode(input)
-
-	// Should not contain padding
-	if strings.Contains(encoded, "=") {
-		t.Error("Base64 URL encoding should not contain padding")
-	}
-
-	// Should not contain + or /
-	if strings.Contains(encoded, "+") || strings.Contains(encoded, "/") {
-		t.Error("Base64 URL encoding should not contain + or /")
 	}
 }

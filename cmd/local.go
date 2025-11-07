@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/qubitquilt/supactl/internal/local"
 	"github.com/spf13/cobra"
@@ -34,29 +33,24 @@ func init() {
 	rootCmd.AddCommand(localCmd)
 }
 
-// getLocalDatabase loads the local projects database and exits on error
-func getLocalDatabase() *local.Database {
+// getLocalDatabase loads the local projects database
+func getLocalDatabase() (*local.Database, error) {
 	db, err := local.LoadDatabase()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error loading local database: %v\n", err)
-		os.Exit(1)
+		return nil, fmt.Errorf("loading local database: %w", err)
 	}
-	return db
+	return db, nil
 }
 
 // checkDockerRequirements ensures Docker and Docker Compose are available
-func checkDockerRequirements() {
+func checkDockerRequirements() error {
 	if err := local.CheckDockerAvailable(); err != nil {
-		fmt.Fprintf(os.Stderr, "Error: Docker is required but not available.\n")
-		fmt.Fprintf(os.Stderr, "Please install Docker and ensure it's running.\n")
-		fmt.Fprintf(os.Stderr, "Visit https://docs.docker.com/get-docker/ for installation instructions.\n")
-		os.Exit(1)
+		return fmt.Errorf("Docker is required but not available.\nPlease install Docker and ensure it's running.\nVisit https://docs.docker.com/get-docker/ for installation instructions")
 	}
 
 	if err := local.CheckDockerComposeAvailable(); err != nil {
-		fmt.Fprintf(os.Stderr, "Error: Docker Compose is required but not available.\n")
-		fmt.Fprintf(os.Stderr, "Please install Docker Compose.\n")
-		fmt.Fprintf(os.Stderr, "Visit https://docs.docker.com/compose/install/ for installation instructions.\n")
-		os.Exit(1)
+		return fmt.Errorf("Docker Compose is required but not available.\nPlease install Docker Compose.\nVisit https://docs.docker.com/compose/install/ for installation instructions")
 	}
+
+	return nil
 }
