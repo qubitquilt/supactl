@@ -16,8 +16,8 @@ A comprehensive toolkit for managing self-hosted Supabase instances, consisting 
 The modern way to manage Supabase instances through a central server.
 
 ```bash
-# Install
-curl -L https://github.com/qubitquilt/supactl/releases/latest/download/supactl-linux-amd64 -o supactl
+# Install (Linux, amd64)
+curl -L "https://github.com/qubitquilt/supactl/releases/latest/download/supactl_Linux_x86_64.tar.gz" | tar -xz
 chmod +x supactl
 sudo mv supactl /usr/local/bin/
 
@@ -102,25 +102,30 @@ This repository provides two powerful tools for managing self-hosted Supabase in
 
 #### Using curl (Linux/macOS)
 ```bash
-# Linux
-curl -L https://github.com/qubitquilt/supactl/releases/latest/download/supactl-linux-amd64 -o supactl
+# Linux (amd64)
+curl -L "https://github.com/qubitquilt/supactl/releases/latest/download/supactl_Linux_x86_64.tar.gz" | tar -xz
+chmod +x supactl
+sudo mv supactl /usr/local/bin/
+
+# Linux (arm64)
+curl -L "https://github.com/qubitquilt/supactl/releases/latest/download/supactl_Linux_arm64.tar.gz" | tar -xz
 chmod +x supactl
 sudo mv supactl /usr/local/bin/
 
 # macOS (Intel)
-curl -L https://github.com/qubitquilt/supactl/releases/latest/download/supactl-darwin-amd64 -o supactl
+curl -L "https://github.com/qubitquilt/supactl/releases/latest/download/supactl_Darwin_x86_64.tar.gz" | tar -xz
 chmod +x supactl
 sudo mv supactl /usr/local/bin/
 
 # macOS (Apple Silicon)
-curl -L https://github.com/qubitquilt/supactl/releases/latest/download/supactl-darwin-arm64 -o supactl
+curl -L "https://github.com/qubitquilt/supactl/releases/latest/download/supactl_Darwin_arm64.tar.gz" | tar -xz
 chmod +x supactl
 sudo mv supactl /usr/local/bin/
 ```
 
 #### Using Homebrew (macOS)
 ```bash
-brew tap qubitquilt/tap
+brew tap qubitquilt/homebrew-tap
 brew install supactl
 ```
 

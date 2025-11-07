@@ -89,22 +89,37 @@ get_latest_version() {
     print_info "Latest version: $LATEST_RELEASE"
 }
 
-# Download binary
+# Download and extract binary
 download_binary() {
-    DOWNLOAD_URL="https://github.com/${REPO}/releases/download/${LATEST_RELEASE}/${BINARY_NAME}-${PLATFORM}"
+    # Convert OS to title case
+    local os_title
+    os_title=$(echo "$OS" | sed 's/.*/\u&/')
+
+    # Convert architecture name
+    local arch_name="$ARCH"
+    if [ "$arch_name" = "amd64" ]; then
+        arch_name="x86_64"
+    fi
+
+    # Build archive name
+    local archive_name="${BINARY_NAME}_${os_title}_${arch_name}.tar.gz"
+    DOWNLOAD_URL="https://github.com/${REPO}/releases/download/${LATEST_RELEASE}/${archive_name}"
 
     print_info "Downloading from: $DOWNLOAD_URL"
 
-    TMP_FILE=$(mktemp)
+    # Create temporary directory for extraction
+    local tmp_dir
+    tmp_dir=$(mktemp -d)
 
-    if ! curl -L -f -o "$TMP_FILE" "$DOWNLOAD_URL"; then
-        print_error "Failed to download binary"
-        rm -f "$TMP_FILE"
+    # Download and extract archive
+    if ! curl -L -f "$DOWNLOAD_URL" | tar -xz -C "$tmp_dir"; then
+        print_error "Failed to download and extract binary"
+        rm -rf "$tmp_dir"
         exit 1
     fi
 
-    print_success "Download completed"
-    echo "$TMP_FILE"
+    print_success "Download and extraction completed"
+    echo "$tmp_dir/$BINARY_NAME"
 }
 
 # Install binary
@@ -122,6 +137,9 @@ install_binary() {
         sudo mv "$tmp_file" "$INSTALL_DIR/$BINARY_NAME"
         sudo chmod +x "$INSTALL_DIR/$BINARY_NAME"
     fi
+
+    # Clean up temp directory
+    rm -rf "$(dirname "$tmp_file")"
 
     print_success "Installed $BINARY_NAME to $INSTALL_DIR"
 }

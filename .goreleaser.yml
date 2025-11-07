@@ -88,7 +88,7 @@ release:
     ### Linux/macOS
     ```bash
     # Download and extract
-    curl -L https://github.com/qubitquilt/supactl/releases/download/{{ .Tag }}/supactl_{{ .Os }}_{{ .Arch }}.tar.gz | tar xz
+    curl -L https://github.com/qubitquilt/supactl/releases/download/{{ .Tag }}/{{ .ProjectName }}_{{ title .Os }}_{{ if eq .Arch "amd64" }}x86_64{{ else }}{{ .Arch }}{{ end }}.tar.gz | tar xz
 
     # Move to PATH
     sudo mv supactl /usr/local/bin/
