@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/yourusername/supactl/internal/testutil"
+	"github.com/qubitquilt/supactl/internal/testutil"
 )
 
 func TestNewClient(t *testing.T) {
@@ -398,6 +398,305 @@ func TestGetInstance(t *testing.T) {
 				if instance.AnonKey != tt.wantInstance.AnonKey {
 					t.Errorf("instance.AnonKey = %v, want %v", instance.AnonKey, tt.wantInstance.AnonKey)
 				}
+			}
+		})
+	}
+}
+
+func TestStartInstance(t *testing.T) {
+	tests := []struct {
+		name        string
+		projectName string
+		statusCode  int
+		response    interface{}
+		wantErr     bool
+	}{
+		{
+			name:        "successful start",
+			projectName: "my-project",
+			statusCode:  http.StatusOK,
+			response:    nil,
+			wantErr:     false,
+		},
+		{
+			name:        "successful start with accepted status",
+			projectName: "my-project",
+			statusCode:  http.StatusAccepted,
+			response:    nil,
+			wantErr:     false,
+		},
+		{
+			name:        "instance not found",
+			projectName: "non-existent",
+			statusCode:  http.StatusNotFound,
+			response: ErrorResponse{
+				Error:   "Not Found",
+				Message: "Instance not found",
+			},
+			wantErr: true,
+		},
+		{
+			name:        "instance already running",
+			projectName: "running-project",
+			statusCode:  http.StatusConflict,
+			response: ErrorResponse{
+				Error:   "Conflict",
+				Message: "Instance is already running",
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			server := testutil.NewMockServer()
+			defer server.Close()
+
+			server.On("POST", "/api/v1/instances/"+tt.projectName+"/start", func(w http.ResponseWriter, r *http.Request) {
+				if tt.response == nil {
+					w.WriteHeader(tt.statusCode)
+				} else {
+					testutil.RespondJSON(w, tt.statusCode, tt.response)
+				}
+			})
+
+			client := NewClient(server.URL(), "test-key")
+			err := client.StartInstance(tt.projectName)
+
+			if (err != nil) != tt.wantErr {
+				t.Errorf("StartInstance() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestStopInstance(t *testing.T) {
+	tests := []struct {
+		name        string
+		projectName string
+		statusCode  int
+		response    interface{}
+		wantErr     bool
+	}{
+		{
+			name:        "successful stop",
+			projectName: "my-project",
+			statusCode:  http.StatusOK,
+			response:    nil,
+			wantErr:     false,
+		},
+		{
+			name:        "successful stop with accepted status",
+			projectName: "my-project",
+			statusCode:  http.StatusAccepted,
+			response:    nil,
+			wantErr:     false,
+		},
+		{
+			name:        "instance not found",
+			projectName: "non-existent",
+			statusCode:  http.StatusNotFound,
+			response: ErrorResponse{
+				Error:   "Not Found",
+				Message: "Instance not found",
+			},
+			wantErr: true,
+		},
+		{
+			name:        "instance already stopped",
+			projectName: "stopped-project",
+			statusCode:  http.StatusConflict,
+			response: ErrorResponse{
+				Error:   "Conflict",
+				Message: "Instance is already stopped",
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			server := testutil.NewMockServer()
+			defer server.Close()
+
+			server.On("POST", "/api/v1/instances/"+tt.projectName+"/stop", func(w http.ResponseWriter, r *http.Request) {
+				if tt.response == nil {
+					w.WriteHeader(tt.statusCode)
+				} else {
+					testutil.RespondJSON(w, tt.statusCode, tt.response)
+				}
+			})
+
+			client := NewClient(server.URL(), "test-key")
+			err := client.StopInstance(tt.projectName)
+
+			if (err != nil) != tt.wantErr {
+				t.Errorf("StopInstance() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestRestartInstance(t *testing.T) {
+	tests := []struct {
+		name        string
+		projectName string
+		statusCode  int
+		response    interface{}
+		wantErr     bool
+	}{
+		{
+			name:        "successful restart",
+			projectName: "my-project",
+			statusCode:  http.StatusOK,
+			response:    nil,
+			wantErr:     false,
+		},
+		{
+			name:        "successful restart with accepted status",
+			projectName: "my-project",
+			statusCode:  http.StatusAccepted,
+			response:    nil,
+			wantErr:     false,
+		},
+		{
+			name:        "instance not found",
+			projectName: "non-existent",
+			statusCode:  http.StatusNotFound,
+			response: ErrorResponse{
+				Error:   "Not Found",
+				Message: "Instance not found",
+			},
+			wantErr: true,
+		},
+		{
+			name:        "restart forbidden",
+			projectName: "protected-project",
+			statusCode:  http.StatusForbidden,
+			response: ErrorResponse{
+				Error:   "Forbidden",
+				Message: "Cannot restart this instance",
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			server := testutil.NewMockServer()
+			defer server.Close()
+
+			server.On("POST", "/api/v1/instances/"+tt.projectName+"/restart", func(w http.ResponseWriter, r *http.Request) {
+				if tt.response == nil {
+					w.WriteHeader(tt.statusCode)
+				} else {
+					testutil.RespondJSON(w, tt.statusCode, tt.response)
+				}
+			})
+
+			client := NewClient(server.URL(), "test-key")
+			err := client.RestartInstance(tt.projectName)
+
+			if (err != nil) != tt.wantErr {
+				t.Errorf("RestartInstance() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestGetLogs(t *testing.T) {
+	tests := []struct {
+		name        string
+		projectName string
+		lines       int
+		statusCode  int
+		response    interface{}
+		wantLogs    string
+		wantErr     bool
+	}{
+		{
+			name:        "get logs successfully",
+			projectName: "my-project",
+			lines:       100,
+			statusCode:  http.StatusOK,
+			response:    "2025-01-01 10:00:00 [INFO] Application started\n2025-01-01 10:00:01 [INFO] Listening on port 3000\n",
+			wantLogs:    "2025-01-01 10:00:00 [INFO] Application started\n2025-01-01 10:00:01 [INFO] Listening on port 3000\n",
+			wantErr:     false,
+		},
+		{
+			name:        "get logs with custom line count",
+			projectName: "my-project",
+			lines:       50,
+			statusCode:  http.StatusOK,
+			response:    "Log line 1\nLog line 2\n",
+			wantLogs:    "Log line 1\nLog line 2\n",
+			wantErr:     false,
+		},
+		{
+			name:        "empty logs",
+			projectName: "new-project",
+			lines:       100,
+			statusCode:  http.StatusOK,
+			response:    "",
+			wantLogs:    "",
+			wantErr:     false,
+		},
+		{
+			name:        "instance not found",
+			projectName: "non-existent",
+			lines:       100,
+			statusCode:  http.StatusNotFound,
+			response: ErrorResponse{
+				Error:   "Not Found",
+				Message: "Instance not found",
+			},
+			wantErr: true,
+		},
+		{
+			name:        "logs unavailable",
+			projectName: "stopped-project",
+			lines:       100,
+			statusCode:  http.StatusServiceUnavailable,
+			response: ErrorResponse{
+				Error:   "Service Unavailable",
+				Message: "Logs are not available for stopped instances",
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			server := testutil.NewMockServer()
+			defer server.Close()
+
+			expectedPath := "/api/v1/instances/" + tt.projectName + "/logs"
+			server.On("GET", expectedPath, func(w http.ResponseWriter, r *http.Request) {
+				// Verify query parameter is present
+				linesParam := r.URL.Query().Get("lines")
+				if linesParam == "" {
+					t.Error("expected 'lines' query parameter")
+				}
+
+				// Return response
+				if tt.wantErr {
+					testutil.RespondJSON(w, tt.statusCode, tt.response)
+				} else {
+					w.WriteHeader(tt.statusCode)
+					w.Write([]byte(tt.response.(string)))
+				}
+			})
+
+			client := NewClient(server.URL(), "test-key")
+			logs, err := client.GetLogs(tt.projectName, tt.lines)
+
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetLogs() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+
+			if !tt.wantErr && logs != tt.wantLogs {
+				t.Errorf("GetLogs() = %v, want %v", logs, tt.wantLogs)
 			}
 		})
 	}

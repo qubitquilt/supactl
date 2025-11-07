@@ -2,9 +2,11 @@ package cmd
 
 import (
 	"os"
+	"runtime"
 	"testing"
+	"time"
 
-	"github.com/yourusername/supactl/internal/auth"
+	"github.com/qubitquilt/supactl/internal/auth"
 )
 
 func TestGetAPIClientNotLoggedIn(t *testing.T) {
@@ -15,10 +17,15 @@ func TestGetAPIClientNotLoggedIn(t *testing.T) {
 	}
 	defer os.RemoveAll(tempHome)
 
-	// Override HOME
+	// Override HOME and USERPROFILE
 	oldHome := os.Getenv("HOME")
+	oldUserProfile := os.Getenv("USERPROFILE")
 	os.Setenv("HOME", tempHome)
-	defer os.Setenv("HOME", oldHome)
+	os.Setenv("USERPROFILE", tempHome)
+	defer func() {
+		os.Setenv("HOME", oldHome)
+		os.Setenv("USERPROFILE", oldUserProfile)
+	}()
 
 	// Ensure no config exists
 	auth.ClearConfig()
@@ -39,15 +46,29 @@ func TestGetAPIClientLoggedIn(t *testing.T) {
 	}
 	defer os.RemoveAll(tempHome)
 
-	// Override HOME
+	// Override HOME and USERPROFILE
 	oldHome := os.Getenv("HOME")
+	oldUserProfile := os.Getenv("USERPROFILE")
 	os.Setenv("HOME", tempHome)
-	defer os.Setenv("HOME", oldHome)
+	os.Setenv("USERPROFILE", tempHome)
+	defer func() {
+		os.Setenv("HOME", oldHome)
+		os.Setenv("USERPROFILE", oldUserProfile)
+		// Give time for file handles to be released on Windows
+		if runtime.GOOS == "windows" {
+			time.Sleep(50 * time.Millisecond)
+		}
+	}()
 
 	// Save config
 	err = auth.SaveConfig("https://example.com", "test-key")
 	if err != nil {
 		t.Fatalf("failed to save config: %v", err)
+	}
+
+	// Give time for file to be fully written on Windows
+	if runtime.GOOS == "windows" {
+		time.Sleep(50 * time.Millisecond)
 	}
 
 	// Get client

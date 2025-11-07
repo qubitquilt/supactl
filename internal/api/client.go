@@ -9,6 +9,13 @@ import (
 	"time"
 )
 
+// Instance lifecycle action constants
+const (
+	instanceActionStart   = "start"
+	instanceActionStop    = "stop"
+	instanceActionRestart = "restart"
+)
+
 // Client is the API client for SupaControl server
 type Client struct {
 	ServerURL  string
@@ -182,4 +189,56 @@ func (c *Client) GetInstance(name string) (*Instance, error) {
 	}
 
 	return &instance, nil
+}
+
+// instanceAction performs a lifecycle action (start, stop, restart) on an instance
+func (c *Client) instanceAction(name, action string) error {
+	endpoint := fmt.Sprintf("/api/v1/instances/%s/%s", name, action)
+	resp, err := c.makeRequest("POST", endpoint, nil)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusAccepted {
+		return c.handleErrorResponse(resp)
+	}
+
+	return nil
+}
+
+// StartInstance starts a stopped instance
+func (c *Client) StartInstance(name string) error {
+	return c.instanceAction(name, instanceActionStart)
+}
+
+// StopInstance stops a running instance
+func (c *Client) StopInstance(name string) error {
+	return c.instanceAction(name, instanceActionStop)
+}
+
+// RestartInstance restarts an instance
+func (c *Client) RestartInstance(name string) error {
+	return c.instanceAction(name, instanceActionRestart)
+}
+
+// GetLogs retrieves logs for an instance
+func (c *Client) GetLogs(name string, lines int) (string, error) {
+	endpoint := fmt.Sprintf("/api/v1/instances/%s/logs?lines=%d", name, lines)
+	resp, err := c.makeRequest("GET", endpoint, nil)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return "", c.handleErrorResponse(resp)
+	}
+
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("failed to read logs: %w", err)
+	}
+
+	return string(bodyBytes), nil
 }

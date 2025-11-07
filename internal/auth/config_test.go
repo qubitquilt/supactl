@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 )
 
@@ -17,8 +18,13 @@ func TestSaveConfig(t *testing.T) {
 
 	// Override home directory for testing
 	oldHome := os.Getenv("HOME")
+	oldUserProfile := os.Getenv("USERPROFILE")
 	os.Setenv("HOME", tempHome)
-	defer os.Setenv("HOME", oldHome)
+	os.Setenv("USERPROFILE", tempHome)
+	defer func() {
+		os.Setenv("HOME", oldHome)
+		os.Setenv("USERPROFILE", oldUserProfile)
+	}()
 
 	tests := []struct {
 		name      string
@@ -65,15 +71,17 @@ func TestSaveConfig(t *testing.T) {
 					return
 				}
 
-				// Verify file permissions
-				info, err := os.Stat(configPath)
-				if err != nil {
-					t.Errorf("failed to stat config file: %v", err)
-					return
-				}
+				// Verify file permissions (Unix only)
+				if runtime.GOOS != "windows" {
+					info, err := os.Stat(configPath)
+					if err != nil {
+						t.Errorf("failed to stat config file: %v", err)
+						return
+					}
 
-				if info.Mode().Perm() != 0600 {
-					t.Errorf("config file permissions = %v, want 0600", info.Mode().Perm())
+					if info.Mode().Perm() != 0600 {
+						t.Errorf("config file permissions = %v, want 0600", info.Mode().Perm())
+					}
 				}
 
 				// Verify content
@@ -108,8 +116,13 @@ func TestLoadConfig(t *testing.T) {
 	defer os.RemoveAll(tempHome)
 
 	oldHome := os.Getenv("HOME")
+	oldUserProfile := os.Getenv("USERPROFILE")
 	os.Setenv("HOME", tempHome)
-	defer os.Setenv("HOME", oldHome)
+	os.Setenv("USERPROFILE", tempHome)
+	defer func() {
+		os.Setenv("HOME", oldHome)
+		os.Setenv("USERPROFILE", oldUserProfile)
+	}()
 
 	tests := []struct {
 		name      string
@@ -182,8 +195,13 @@ func TestClearConfig(t *testing.T) {
 	defer os.RemoveAll(tempHome)
 
 	oldHome := os.Getenv("HOME")
+	oldUserProfile := os.Getenv("USERPROFILE")
 	os.Setenv("HOME", tempHome)
-	defer os.Setenv("HOME", oldHome)
+	os.Setenv("USERPROFILE", tempHome)
+	defer func() {
+		os.Setenv("HOME", oldHome)
+		os.Setenv("USERPROFILE", oldUserProfile)
+	}()
 
 	tests := []struct {
 		name      string
@@ -239,8 +257,13 @@ func TestIsLoggedIn(t *testing.T) {
 	defer os.RemoveAll(tempHome)
 
 	oldHome := os.Getenv("HOME")
+	oldUserProfile := os.Getenv("USERPROFILE")
 	os.Setenv("HOME", tempHome)
-	defer os.Setenv("HOME", oldHome)
+	os.Setenv("USERPROFILE", tempHome)
+	defer func() {
+		os.Setenv("HOME", oldHome)
+		os.Setenv("USERPROFILE", oldUserProfile)
+	}()
 
 	tests := []struct {
 		name      string
@@ -296,25 +319,35 @@ func TestIsLoggedIn(t *testing.T) {
 }
 
 func TestGetConfigPath(t *testing.T) {
-	// Save old HOME
+	// Create a temporary home directory
+	tempHome, err := os.MkdirTemp("", "supactl-test-*")
+	if err != nil {
+		t.Fatalf("failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tempHome)
+
+	// Save old environment variables
 	oldHome := os.Getenv("HOME")
-	defer os.Setenv("HOME", oldHome)
+	oldUserProfile := os.Getenv("USERPROFILE")
+	defer func() {
+		os.Setenv("HOME", oldHome)
+		os.Setenv("USERPROFILE", oldUserProfile)
+	}()
 
 	tests := []struct {
 		name    string
-		homeDir string
 		wantErr bool
 	}{
 		{
 			name:    "valid home directory",
-			homeDir: "/home/testuser",
 			wantErr: false,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			os.Setenv("HOME", tt.homeDir)
+			os.Setenv("HOME", tempHome)
+			os.Setenv("USERPROFILE", tempHome)
 
 			path, err := GetConfigPath()
 			if (err != nil) != tt.wantErr {
@@ -323,7 +356,7 @@ func TestGetConfigPath(t *testing.T) {
 			}
 
 			if !tt.wantErr {
-				expectedPath := filepath.Join(tt.homeDir, configDir, configFile)
+				expectedPath := filepath.Join(tempHome, configDir, configFile)
 				if path != expectedPath {
 					t.Errorf("GetConfigPath() = %v, want %v", path, expectedPath)
 				}

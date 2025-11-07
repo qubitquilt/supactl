@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"github.com/yourusername/supactl/internal/link"
+	"github.com/qubitquilt/supactl/internal/link"
 )
 
 // statusCmd represents the status command
