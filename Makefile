@@ -60,7 +60,7 @@ vet: ## Run go vet
 
 clean: ## Remove build artifacts
 	@echo "$(BLUE)Cleaning...$(NC)"
-	rm -rf $(BUILD_DIR)
+	rm -rf ./$(BUILD_DIR)
 	rm -f coverage.txt coverage.html
 
 install: build ## Install the binary to GOPATH/bin

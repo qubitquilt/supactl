@@ -130,14 +130,18 @@ download_binary() {
             if [ $? -eq 0 ]; then
                 print_success "Checksum verification passed"
             else
-                print_warning "Checksum verification failed, proceeding anyway"
+                print_error "Checksum verification failed. Aborting installation."
+                rm -rf "$tmp_dir"
+                exit 1
             fi
         elif command -v shasum &> /dev/null; then
             (cd "$tmp_dir" && shasum -a 256 -c --ignore-missing checksums.txt 2>/dev/null | grep "$archive_name")
             if [ $? -eq 0 ]; then
                 print_success "Checksum verification passed"
             else
-                print_warning "Checksum verification failed, proceeding anyway"
+                print_error "Checksum verification failed. Aborting installation."
+                rm -rf "$tmp_dir"
+                exit 1
             fi
         else
             print_warning "sha256sum/shasum not found, skipping checksum verification"
