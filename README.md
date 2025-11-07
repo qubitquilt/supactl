@@ -5,8 +5,8 @@ A comprehensive toolkit for managing self-hosted Supabase instances, consisting 
 1. **supactl** - A modern CLI for managing Supabase instances via a SupaControl server
 2. **supascale.sh** - A bash script for direct local management of multiple Supabase instances
 
-[![Test](https://github.com/yourusername/supactl/workflows/Test/badge.svg)](https://github.com/yourusername/supactl/actions)
-[![Go Report Card](https://goreportcard.com/badge/github.com/yourusername/supactl)](https://goreportcard.com/report/github.com/yourusername/supactl)
+[![Test](https://github.com/qubitquilt/supactl/workflows/Test/badge.svg)](https://github.com/qubitquilt/supactl/actions)
+[![Go Report Card](https://goreportcard.com/badge/github.com/qubitquilt/supactl)](https://goreportcard.com/report/github.com/qubitquilt/supactl)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
 ## 🚀 Quick Start
@@ -17,7 +17,7 @@ The modern way to manage Supabase instances through a central server.
 
 ```bash
 # Install
-curl -L https://github.com/yourusername/supactl/releases/latest/download/supactl-linux-amd64 -o supactl
+curl -L https://github.com/qubitquilt/supactl/releases/latest/download/supactl-linux-amd64 -o supactl
 chmod +x supactl
 sudo mv supactl /usr/local/bin/
 
@@ -35,7 +35,7 @@ Direct local management for single-machine deployments.
 
 ```bash
 # Clone and use
-git clone https://github.com/yourusername/supactl.git
+git clone https://github.com/qubitquilt/supactl.git
 cd supactl
 chmod +x supascale.sh
 ./supascale.sh add my-project
@@ -103,30 +103,30 @@ This repository provides two powerful tools for managing self-hosted Supabase in
 #### Using curl (Linux/macOS)
 ```bash
 # Linux
-curl -L https://github.com/yourusername/supactl/releases/latest/download/supactl-linux-amd64 -o supactl
+curl -L https://github.com/qubitquilt/supactl/releases/latest/download/supactl-linux-amd64 -o supactl
 chmod +x supactl
 sudo mv supactl /usr/local/bin/
 
 # macOS (Intel)
-curl -L https://github.com/yourusername/supactl/releases/latest/download/supactl-darwin-amd64 -o supactl
+curl -L https://github.com/qubitquilt/supactl/releases/latest/download/supactl-darwin-amd64 -o supactl
 chmod +x supactl
 sudo mv supactl /usr/local/bin/
 
 # macOS (Apple Silicon)
-curl -L https://github.com/yourusername/supactl/releases/latest/download/supactl-darwin-arm64 -o supactl
+curl -L https://github.com/qubitquilt/supactl/releases/latest/download/supactl-darwin-arm64 -o supactl
 chmod +x supactl
 sudo mv supactl /usr/local/bin/
 ```
 
 #### Using Homebrew (macOS)
 ```bash
-brew tap yourusername/tap
+brew tap qubitquilt/tap
 brew install supactl
 ```
 
 #### From Source
 ```bash
-git clone https://github.com/yourusername/supactl.git
+git clone https://github.com/qubitquilt/supactl.git
 cd supactl
 make build
 sudo make install
@@ -135,7 +135,7 @@ sudo make install
 ### Installing supascale.sh
 
 ```bash
-git clone https://github.com/yourusername/supactl.git
+git clone https://github.com/qubitquilt/supactl.git
 cd supactl
 chmod +x supascale.sh
 
@@ -237,7 +237,7 @@ supactl works with SupaControl servers that implement these endpoints:
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/supactl.git
+git clone https://github.com/qubitquilt/supactl.git
 cd supactl
 
 # Build
@@ -408,8 +408,8 @@ See [LICENSE](LICENSE) for full details.
 
 ## 💬 Support & Community
 
-- **Issues**: [GitHub Issues](https://github.com/yourusername/supactl/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/yourusername/supactl/discussions)
+- **Issues**: [GitHub Issues](https://github.com/qubitquilt/supactl/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/qubitquilt/supactl/discussions)
 - **Documentation**: See [SUPACTL_README.md](SUPACTL_README.md) for detailed CLI docs
 
 ## 🗺️ Roadmap

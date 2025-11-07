@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/yourusername/supactl/internal/testutil"
+	"github.com/qubitquilt/supactl/internal/testutil"
 )
 
 func TestNewClient(t *testing.T) {

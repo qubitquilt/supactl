@@ -39,7 +39,7 @@ This project adheres to a code of conduct that all contributors are expected to 
 
 3. **Add the upstream repository**:
    ```bash
-   git remote add upstream https://github.com/yourusername/supactl.git
+   git remote add upstream https://github.com/qubitquilt/supactl.git
    ```
 
 4. **Install dependencies**:

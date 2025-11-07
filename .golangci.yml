@@ -19,7 +19,7 @@ linters-settings:
   gofmt:
     simplify: true
   goimports:
-    local-prefixes: github.com/yourusername/supactl
+    local-prefixes: github.com/qubitquilt/supactl
   golint:
     min-confidence: 0.8
   govet:

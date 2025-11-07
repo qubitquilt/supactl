@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"github.com/yourusername/supactl/internal/auth"
+	"github.com/qubitquilt/supactl/internal/auth"
 )
 
 // logoutCmd represents the logout command

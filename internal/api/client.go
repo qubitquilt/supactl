@@ -184,9 +184,9 @@ func (c *Client) GetInstance(name string) (*Instance, error) {
 	return &instance, nil
 }
 
-// StartInstance starts a stopped instance
-func (c *Client) StartInstance(name string) error {
-	endpoint := fmt.Sprintf("/api/v1/instances/%s/start", name)
+// instanceAction performs a lifecycle action (start, stop, restart) on an instance
+func (c *Client) instanceAction(name, action string) error {
+	endpoint := fmt.Sprintf("/api/v1/instances/%s/%s", name, action)
 	resp, err := c.makeRequest("POST", endpoint, nil)
 	if err != nil {
 		return err
@@ -198,38 +198,21 @@ func (c *Client) StartInstance(name string) error {
 	}
 
 	return nil
+}
+
+// StartInstance starts a stopped instance
+func (c *Client) StartInstance(name string) error {
+	return c.instanceAction(name, "start")
 }
 
 // StopInstance stops a running instance
 func (c *Client) StopInstance(name string) error {
-	endpoint := fmt.Sprintf("/api/v1/instances/%s/stop", name)
-	resp, err := c.makeRequest("POST", endpoint, nil)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusAccepted {
-		return c.handleErrorResponse(resp)
-	}
-
-	return nil
+	return c.instanceAction(name, "stop")
 }
 
 // RestartInstance restarts an instance
 func (c *Client) RestartInstance(name string) error {
-	endpoint := fmt.Sprintf("/api/v1/instances/%s/restart", name)
-	resp, err := c.makeRequest("POST", endpoint, nil)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusAccepted {
-		return c.handleErrorResponse(resp)
-	}
-
-	return nil
+	return c.instanceAction(name, "restart")
 }
 
 // GetLogs retrieves logs for an instance

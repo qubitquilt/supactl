@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/yourusername/supactl/internal/auth"
+	"github.com/qubitquilt/supactl/internal/auth"
 )
 
 func TestGetAPIClientNotLoggedIn(t *testing.T) {

@@ -5,7 +5,7 @@ BINARY_NAME=supactl
 VERSION?=$(shell git describe --tags --always --dirty)
 BUILD_DIR=dist
 GO=go
-GOFLAGS=-ldflags="-s -w -X github.com/yourusername/supactl/cmd.version=$(VERSION)"
+GOFLAGS=-ldflags="-s -w -X github.com/qubitquilt/supactl/cmd.version=$(VERSION)"
 
 # Colors for output
 BLUE=\033[0;34m

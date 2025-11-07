@@ -1,6 +1,6 @@
 package main
 
-import "github.com/yourusername/supactl/cmd"
+import "github.com/qubitquilt/supactl/cmd"
 
 func main() {
 	cmd.Execute()

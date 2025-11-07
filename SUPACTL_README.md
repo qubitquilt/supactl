@@ -395,7 +395,7 @@ GPL V3 License - Copyright (c) 2025 Frog Byte, LLC
 
 ## Acknowledgments
 
-- Built for [SupaControl](https://github.com/yourusername/supacontrol)
+- Built for [SupaControl](https://github.com/qubitquilt/supacontrol)
 - Powered by [Supabase](https://supabase.com/)
 - CLI framework by [Cobra](https://github.com/spf13/cobra)
 

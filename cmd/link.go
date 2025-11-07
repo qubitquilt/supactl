@@ -6,7 +6,7 @@ import (
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/spf13/cobra"
-	"github.com/yourusername/supactl/internal/link"
+	"github.com/qubitquilt/supactl/internal/link"
 )
 
 // linkCmd represents the link command

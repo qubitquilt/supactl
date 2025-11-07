@@ -5,8 +5,8 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"github.com/yourusername/supactl/internal/api"
-	"github.com/yourusername/supactl/internal/auth"
+	"github.com/qubitquilt/supactl/internal/api"
+	"github.com/qubitquilt/supactl/internal/auth"
 )
 
 var (

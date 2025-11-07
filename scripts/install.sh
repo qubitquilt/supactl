@@ -13,7 +13,7 @@ YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 # Configuration
-REPO="yourusername/supactl"
+REPO="qubitquilt/supactl"
 BINARY_NAME="supactl"
 INSTALL_DIR="/usr/local/bin"
 
@@ -73,9 +73,15 @@ detect_platform() {
 get_latest_version() {
     print_info "Fetching latest release version..."
 
-    LATEST_RELEASE=$(curl -s "https://api.github.com/repos/${REPO}/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+    # Try using jq for robust JSON parsing, fallback to grep/sed if not available
+    if command -v jq &> /dev/null; then
+        LATEST_RELEASE=$(curl -s "https://api.github.com/repos/${REPO}/releases/latest" | jq -r .tag_name)
+    else
+        print_warning "jq not found, using fallback JSON parsing (consider installing jq for better reliability)"
+        LATEST_RELEASE=$(curl -s "https://api.github.com/repos/${REPO}/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+    fi
 
-    if [ -z "$LATEST_RELEASE" ]; then
+    if [ -z "$LATEST_RELEASE" ] || [ "$LATEST_RELEASE" = "null" ]; then
         print_error "Failed to fetch latest release version"
         exit 1
     fi

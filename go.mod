@@ -1,4 +1,4 @@
-module github.com/yourusername/supactl
+module github.com/qubitquilt/supactl
 
 go 1.21
 
