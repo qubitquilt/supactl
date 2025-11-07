@@ -4,9 +4,19 @@ A comprehensive toolkit for managing self-hosted Supabase instances.
 
 **supactl** is a modern, unified CLI for managing Supabase instances both remotely (via a SupaControl server) and locally (direct Docker management).
 
-[![Test](https://github.com/qubitquilt/supactl/workflows/Test/badge.svg)](https://github.com/qubitquilt/supactl/actions)
-[![Go Report Card](https://goreportcard.com/badge/github.com/qubitquilt/supactl)](https://goreportcard.com/report/github.com/qubitquilt/supactl)
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![Test](https://img.shields.io/github/actions/workflow/status/qubitquilt/supactl/test.yml?style=for-the-badge&label=tests)](https://github.com/qubitquilt/supactl/actions)
+[![Go Report Card](https://goreportcard.com/badge/github.com/qubitquilt/supactl?style=for-the-badge)](https://goreportcard.com/report/github.com/qubitquilt/supactl)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg?style=for-the-badge)](https://www.gnu.org/licenses/gpl-3.0)
+[![GitHub release](https://img.shields.io/github/v/release/qubitquilt/supactl?style=for-the-badge)](https://github.com/qubitquilt/supactl/releases)
+
+## Built With
+
+![Go](https://img.shields.io/badge/go-%2300ADD8.svg?style=for-the-badge&logo=go&logoColor=white)
+![Go Version](https://img.shields.io/github/go-mod/go-version/qubitquilt/supactl?style=for-the-badge)
+![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)
+![Linux](https://img.shields.io/badge/Linux-FCC624?style=for-the-badge&logo=linux&logoColor=black)
+![macOS](https://img.shields.io/badge/mac%20os-000000?style=for-the-badge&logo=macos&logoColor=F0F0F0)
+![Windows](https://img.shields.io/badge/Windows-0078D4?style=for-the-badge&logo=windows&logoColor=white)
 
 ## 🚀 Quick Start
 
