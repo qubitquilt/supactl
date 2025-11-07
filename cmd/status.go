@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/spf13/cobra"
 	"github.com/qubitquilt/supactl/internal/link"
+	"github.com/spf13/cobra"
 )
 
 // statusCmd represents the status command
