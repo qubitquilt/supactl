@@ -104,21 +104,57 @@ download_binary() {
     # Build archive name
     local archive_name="${BINARY_NAME}_${os_title}_${arch_name}.tar.gz"
     DOWNLOAD_URL="https://github.com/${REPO}/releases/download/${LATEST_RELEASE}/${archive_name}"
+    CHECKSUM_URL="https://github.com/${REPO}/releases/download/${LATEST_RELEASE}/checksums.txt"
 
     print_info "Downloading from: $DOWNLOAD_URL"
 
-    # Create temporary directory for extraction
+    # Create temporary directory
     local tmp_dir
     tmp_dir=$(mktemp -d)
+    local archive_path="$tmp_dir/$archive_name"
 
-    # Download and extract archive
-    if ! curl -L -f "$DOWNLOAD_URL" | tar -xz -C "$tmp_dir"; then
-        print_error "Failed to download and extract binary"
+    # Download archive to file (more secure than piping directly to tar)
+    if ! curl -L -f -o "$archive_path" "$DOWNLOAD_URL"; then
+        print_error "Failed to download archive"
         rm -rf "$tmp_dir"
         exit 1
     fi
 
-    print_success "Download and extraction completed"
+    print_success "Download completed"
+
+    # Verify checksum if available
+    if curl -L -f -o "$tmp_dir/checksums.txt" "$CHECKSUM_URL" 2>/dev/null; then
+        print_info "Verifying checksum..."
+        if command -v sha256sum &> /dev/null; then
+            (cd "$tmp_dir" && sha256sum -c --ignore-missing checksums.txt 2>/dev/null | grep "$archive_name")
+            if [ $? -eq 0 ]; then
+                print_success "Checksum verification passed"
+            else
+                print_warning "Checksum verification failed, proceeding anyway"
+            fi
+        elif command -v shasum &> /dev/null; then
+            (cd "$tmp_dir" && shasum -a 256 -c --ignore-missing checksums.txt 2>/dev/null | grep "$archive_name")
+            if [ $? -eq 0 ]; then
+                print_success "Checksum verification passed"
+            else
+                print_warning "Checksum verification failed, proceeding anyway"
+            fi
+        else
+            print_warning "sha256sum/shasum not found, skipping checksum verification"
+        fi
+    else
+        print_warning "Checksums not available, skipping verification"
+    fi
+
+    # Extract archive
+    print_info "Extracting archive..."
+    if ! tar -xzf "$archive_path" -C "$tmp_dir"; then
+        print_error "Failed to extract archive"
+        rm -rf "$tmp_dir"
+        exit 1
+    fi
+
+    print_success "Extraction completed"
     echo "$tmp_dir/$BINARY_NAME"
 }
 

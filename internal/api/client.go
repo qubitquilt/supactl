@@ -9,6 +9,13 @@ import (
 	"time"
 )
 
+// Instance lifecycle action constants
+const (
+	instanceActionStart   = "start"
+	instanceActionStop    = "stop"
+	instanceActionRestart = "restart"
+)
+
 // Client is the API client for SupaControl server
 type Client struct {
 	ServerURL  string
@@ -202,17 +209,17 @@ func (c *Client) instanceAction(name, action string) error {
 
 // StartInstance starts a stopped instance
 func (c *Client) StartInstance(name string) error {
-	return c.instanceAction(name, "start")
+	return c.instanceAction(name, instanceActionStart)
 }
 
 // StopInstance stops a running instance
 func (c *Client) StopInstance(name string) error {
-	return c.instanceAction(name, "stop")
+	return c.instanceAction(name, instanceActionStop)
 }
 
 // RestartInstance restarts an instance
 func (c *Client) RestartInstance(name string) error {
-	return c.instanceAction(name, "restart")
+	return c.instanceAction(name, instanceActionRestart)
 }
 
 // GetLogs retrieves logs for an instance
