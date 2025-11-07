@@ -1,9 +1,8 @@
 # Supabase Management Tools
 
-A comprehensive toolkit for managing self-hosted Supabase instances, consisting of two complementary tools:
+A comprehensive toolkit for managing self-hosted Supabase instances.
 
-1. **supactl** - A modern CLI for managing Supabase instances via a SupaControl server
-2. **supascale.sh** - A bash script for direct local management of multiple Supabase instances
+**supactl** is a modern, unified CLI for managing Supabase instances both remotely (via a SupaControl server) and locally (direct Docker management).
 
 [![Test](https://github.com/qubitquilt/supactl/workflows/Test/badge.svg)](https://github.com/qubitquilt/supactl/actions)
 [![Go Report Card](https://goreportcard.com/badge/github.com/qubitquilt/supactl)](https://goreportcard.com/report/github.com/qubitquilt/supactl)
@@ -11,33 +10,35 @@ A comprehensive toolkit for managing self-hosted Supabase instances, consisting 
 
 ## 🚀 Quick Start
 
-### supactl (Recommended)
-
-The modern way to manage Supabase instances through a central server.
+### Install supactl
 
 ```bash
 # Install via script (recommended - secure, automated, cross-platform)
 curl -sSL https://raw.githubusercontent.com/qubitquilt/supactl/main/scripts/install.sh | bash
+```
 
-# Login and start using
+### Remote Management (via SupaControl Server)
+
+```bash
+# Login to your SupaControl server
 supactl login https://your-supacontrol-server.com
+
+# Manage remote instances
 supactl create my-project
 supactl list
+supactl start my-project
+```
+
+### Local Management (Direct Docker)
+
+```bash
+# Manage local instances directly with Docker
+supactl local add my-project
+supactl local list
+supactl local start my-project
 ```
 
 **[Full supactl Documentation →](SUPACTL_README.md)**
-
-### supascale.sh
-
-Direct local management for single-machine deployments.
-
-```bash
-# Clone and use
-git clone https://github.com/qubitquilt/supactl.git
-cd supactl
-chmod +x supascale.sh
-./supascale.sh add my-project
-```
 
 ## 📋 Table of Contents
 
@@ -53,46 +54,50 @@ chmod +x supascale.sh
 
 ## 🎯 Overview
 
-This repository provides two powerful tools for managing self-hosted Supabase instances:
+`supactl` is a unified, Go-based command-line interface for managing self-hosted Supabase instances in two modes:
 
-### supactl - Modern CLI Tool
+### Remote Management (Server Mode)
 
-`supactl` is a Go-based command-line interface that connects to a SupaControl management server, providing:
+Connect to a SupaControl management server for centralized control:
 
 - **Centralized Management**: Manage instances across multiple servers from one place
 - **API-Driven**: Full REST API integration with the SupaControl server
 - **Local Linking**: Connect local development directories to remote instances
-- **Cross-Platform**: Single binary for Linux, macOS, and Windows
-- **Interactive**: Beautiful CLI with interactive prompts
+- **Team Collaboration**: Share and manage instances with your team
 - **Secure**: Encrypted credentials storage with proper permissions
 
-### supascale.sh - Direct Management Script
+### Local Management (Direct Mode)
 
-`supascale.sh` is a bash script for direct local management of Supabase instances:
+Manage instances directly on your local machine with Docker:
 
-- **Single Machine Focus**: Perfect for managing multiple instances on one server
+- **No Server Required**: Works standalone, no additional infrastructure needed
 - **Docker Integration**: Direct docker-compose management
 - **Port Management**: Intelligent automatic port allocation
-- **No Server Required**: Standalone script, no additional infrastructure
-- **Quick Setup**: Automated Supabase project initialization
+- **Quick Setup**: Automated Supabase project initialization with secure secrets
+- **Full Control**: Direct access to your local instances
 
-## 🔄 Tools Comparison
+Both modes are available in a **single binary** that works cross-platform on Linux, macOS, and Windows.
 
-| Feature | supactl | supascale.sh |
-|---------|---------|--------------|
-| **Architecture** | Client-Server | Standalone |
-| **Best For** | Multi-server, team usage | Single machine, local dev |
-| **Setup Complexity** | Requires SupaControl server | Just the script |
-| **Remote Management** | ✅ Yes | ❌ No |
-| **API Integration** | ✅ Full REST API | ❌ N/A |
-| **Docker Required** | On server only | ✅ Local required |
-| **Cross-Platform** | ✅ Yes | Linux/macOS only |
-| **Interactive CLI** | ✅ Beautiful prompts | Basic bash |
-| **Local Development** | ✅ Link feature | ✅ Direct access |
+## 🔄 Mode Comparison
 
-**Choose supactl if:** You're managing multiple servers, working in a team, or want centralized control.
+| Feature | Remote Mode (`supactl`) | Local Mode (`supactl local`) | Legacy `supascale.sh` |
+|---------|---------|--------------|--------------|
+| **Architecture** | Client-Server | Standalone | Standalone |
+| **Best For** | Multi-server, team usage | Single machine, local dev | Legacy use only |
+| **Setup** | Requires SupaControl server | Just Docker | Just Docker |
+| **Remote Management** | ✅ Yes | ❌ No | ❌ No |
+| **API Integration** | ✅ Full REST API | ❌ N/A | ❌ N/A |
+| **Docker Required** | On server only | ✅ Locally | ✅ Locally |
+| **Cross-Platform** | ✅ Yes | ✅ Yes | Linux/macOS only |
+| **Interactive CLI** | ✅ Beautiful prompts | ✅ Beautiful prompts | Basic bash |
+| **Secrets Generation** | Server-side | ✅ Automated | ✅ Automated |
+| **Maintained** | ✅ Yes | ✅ Yes | 🔄 Legacy |
 
-**Choose supascale.sh if:** You're managing instances on a single machine and prefer direct Docker access.
+**Use Remote Mode if:** You're managing multiple servers, working in a team, or want centralized control.
+
+**Use Local Mode if:** You're managing instances on a single machine or doing local development.
+
+**Note:** `supascale.sh` is now superseded by `supactl local` which provides the same functionality with better cross-platform support, improved error handling, and a consistent CLI experience.
 
 ## 📦 Installation
 
