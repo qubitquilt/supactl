@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"encoding/json"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -58,9 +57,9 @@ func TestSaveConfig(t *testing.T) {
 			configPath, _ := GetConfigPath()
 			os.RemoveAll(filepath.Dir(configPath))
 
-			err := SaveConfig(tt.serverURL, tt.apiKey)
+			err := SaveLegacyConfig(tt.serverURL, tt.apiKey)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("SaveConfig() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("SaveLegacyConfig() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 
@@ -84,24 +83,29 @@ func TestSaveConfig(t *testing.T) {
 					}
 				}
 
-				// Verify content
-				data, err := os.ReadFile(configPath)
+				// Verify content - new format has contexts
+				config, err := LoadConfig()
 				if err != nil {
-					t.Errorf("failed to read config file: %v", err)
+					t.Errorf("failed to load config: %v", err)
 					return
 				}
 
-				var config Config
-				if err := json.Unmarshal(data, &config); err != nil {
-					t.Errorf("failed to parse config: %v", err)
+				// Check that default context was created
+				if config.CurrentContext != "default" {
+					t.Errorf("CurrentContext = %v, want 'default'", config.CurrentContext)
+				}
+
+				ctx, exists := config.Contexts["default"]
+				if !exists {
+					t.Errorf("'default' context not found")
 					return
 				}
 
-				if config.ServerURL != tt.serverURL {
-					t.Errorf("ServerURL = %v, want %v", config.ServerURL, tt.serverURL)
+				if ctx.ServerURL != tt.serverURL {
+					t.Errorf("ServerURL = %v, want %v", ctx.ServerURL, tt.serverURL)
 				}
-				if config.APIKey != tt.apiKey {
-					t.Errorf("APIKey = %v, want %v", config.APIKey, tt.apiKey)
+				if ctx.APIKey != tt.apiKey {
+					t.Errorf("APIKey = %v, want %v", ctx.APIKey, tt.apiKey)
 				}
 			}
 		})
@@ -134,18 +138,20 @@ func TestLoadConfig(t *testing.T) {
 		{
 			name: "valid config",
 			setupFunc: func() error {
-				return SaveConfig("https://example.com", "my-api-key")
+				return SaveLegacyConfig("https://example.com", "my-api-key")
 			},
 			wantURL: "https://example.com",
 			wantKey: "my-api-key",
 			wantErr: false,
 		},
 		{
-			name: "config does not exist",
+			name: "config does not exist - returns default",
 			setupFunc: func() error {
 				return nil // Don't create config
 			},
-			wantErr: true,
+			wantURL: "",
+			wantKey: "",
+			wantErr: false, // LoadConfig returns default config with local context
 		},
 		{
 			name: "invalid JSON",
@@ -176,11 +182,25 @@ func TestLoadConfig(t *testing.T) {
 			}
 
 			if !tt.wantErr {
-				if config.ServerURL != tt.wantURL {
-					t.Errorf("ServerURL = %v, want %v", config.ServerURL, tt.wantURL)
+				// For new format, check the current context
+				ctx, err := config.GetCurrentContext()
+				if err != nil {
+					t.Errorf("GetCurrentContext() error = %v", err)
+					return
 				}
-				if config.APIKey != tt.wantKey {
-					t.Errorf("APIKey = %v, want %v", config.APIKey, tt.wantKey)
+
+				// If wantURL and wantKey are empty, it's a local context
+				if tt.wantURL == "" && tt.wantKey == "" {
+					if ctx.Provider != "local" {
+						t.Errorf("Provider = %v, want 'local'", ctx.Provider)
+					}
+				} else {
+					if ctx.ServerURL != tt.wantURL {
+						t.Errorf("ServerURL = %v, want %v", ctx.ServerURL, tt.wantURL)
+					}
+					if ctx.APIKey != tt.wantKey {
+						t.Errorf("APIKey = %v, want %v", ctx.APIKey, tt.wantKey)
+					}
 				}
 			}
 		})
@@ -211,7 +231,7 @@ func TestClearConfig(t *testing.T) {
 		{
 			name: "clear existing config",
 			setupFunc: func() error {
-				return SaveConfig("https://example.com", "key")
+				return SaveLegacyConfig("https://example.com", "key")
 			},
 			wantErr: false,
 		},
@@ -273,28 +293,41 @@ func TestIsLoggedIn(t *testing.T) {
 		{
 			name: "logged in with valid config",
 			setupFunc: func() error {
-				return SaveConfig("https://example.com", "key")
+				return SaveLegacyConfig("https://example.com", "key")
 			},
 			want: true,
 		},
 		{
-			name: "not logged in",
+			name: "not logged in - no config",
 			setupFunc: func() error {
 				return nil
 			},
 			want: false,
 		},
 		{
+			name: "not logged in - local context",
+			setupFunc: func() error {
+				config := &Config{
+					CurrentContext: "local",
+					Contexts: map[string]*ContextConfig{
+						"local": {Provider: "local"},
+					},
+				}
+				return SaveConfig(config)
+			},
+			want: false,
+		},
+		{
 			name: "empty server URL",
 			setupFunc: func() error {
-				return SaveConfig("", "key")
+				return SaveLegacyConfig("", "key")
 			},
 			want: false,
 		},
 		{
 			name: "empty API key",
 			setupFunc: func() error {
-				return SaveConfig("https://example.com", "")
+				return SaveLegacyConfig("https://example.com", "")
 			},
 			want: false,
 		},

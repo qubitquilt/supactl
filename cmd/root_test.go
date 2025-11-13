@@ -60,8 +60,8 @@ func TestGetAPIClientLoggedIn(t *testing.T) {
 		}
 	}()
 
-	// Save config
-	err = auth.SaveConfig("https://example.com", "test-key")
+	// Save config using legacy function
+	err = auth.SaveLegacyConfig("https://example.com", "test-key")
 	if err != nil {
 		t.Fatalf("failed to save config: %v", err)
 	}
