@@ -1,418 +1,329 @@
 # supactl
 
-A command-line interface for managing self-hosted Supabase instances via a central SupaControl server.
+A unified, context-aware CLI for managing self-hosted Supabase instances. Supports both remote management via SupaControl servers and local Docker-based management in a single binary.
+
+[![Test](https://img.shields.io/github/actions/workflow/status/qubitquilt/supactl/test.yml?style=for-the-badge&label=tests)](https://github.com/qubitquilt/supactl/actions)
+[![Go Report Card](https://goreportcard.com/badge/github.com/qubitquilt/supactl?style=for-the-badge)](https://goreportcard.com/report/github.com/qubitquilt/supactl)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
+[![GitHub release](https://img.shields.io/github/v/release/qubitquilt/supactl?style=for-the-badge)](https://github.com/qubitquilt/supactl/releases)
 
 ## Overview
 
-`supactl` (Supa-Control CLI) provides a simple, intuitive, and powerful way to manage the lifecycle of self-hosted Supabase instances from your terminal. It connects to a SupaControl management server and allows you to create, list, delete, and manage Supabase instances seamlessly.
+`supactl` provides a kubectl-inspired interface for Supabase instance management. Switch seamlessly between local (Docker) and remote (SupaControl server) modes using contexts. All core commands work identically across providers.
 
-## Features
-
-- **Authentication & Configuration**: Secure login to your SupaControl server with API key authentication
-- **Instance Management**: Create, list, and delete Supabase instances
-- **Local Project Linking**: Link your local development directory to a remote instance
-- **Secure by Default**: Credentials stored with 600 permissions, API keys never echoed
-- **Single Binary**: Self-contained executable with no external dependencies
+### Key Features
+- **Context-Aware**: Unified commands for local and remote management
+- **kubectl-Style UX**: Familiar `get`, `describe`, `config` subcommands
+- **Local Mode**: Direct Docker Compose management, no server required
+- **Remote Mode**: API-driven control of SupaControl servers
+- **Project Linking**: Link local directories to remote instances
+- **Cross-Platform**: Linux, macOS, Windows
+- **Secure**: Encrypted secrets, no credential echoing
+- **Single Binary**: ~10MB, no runtime dependencies
 
 ## Installation
 
-### From Source
-
+### Recommended: Installation Script
 ```bash
-# Clone the repository
-git clone <repository-url>
-cd supactl
+curl -sSL https://raw.githubusercontent.com/qubitquilt/supactl/main/scripts/install.sh | bash
+```
+- Auto-detects platform/architecture
+- Verifies checksums
+- Installs to `/usr/local/bin`
+- Supports Linux (amd64/arm64), macOS (Intel/Apple Silicon)
 
-# Build the binary
-go build -o supactl
-
-# Move to your PATH (optional)
-sudo mv supactl /usr/local/bin/
+### Homebrew (macOS)
+```bash
+brew tap qubitquilt/homebrew-tap
+brew install supactl
 ```
 
-### Pre-built Binaries
+### Manual Download
+Download from [Releases](https://github.com/qubitquilt/supactl/releases/latest):
+- Linux amd64: `supactl_Linux_x86_64.tar.gz`
+- Linux arm64: `supactl_Linux_arm64.tar.gz`
+- macOS Intel: `supactl_Darwin_x86_64.tar.gz`
+- macOS Apple Silicon: `supactl_Darwin_arm64.tar.gz`
+- Windows: `supactl_Windows_x86_64.zip` or `supactl_Windows_arm64.zip`
 
-Download the latest release for your platform from the releases page.
+Extract, `chmod +x supactl`, and add to PATH.
+
+### From Source
+```bash
+git clone https://github.com/qubitquilt/supactl.git
+cd supactl
+make build
+sudo make install  # or copy to PATH
+```
 
 ## Quick Start
 
-### 1. Login to Your SupaControl Server
-
+### 1. Setup Contexts
 ```bash
-supactl login https://your-supacontrol-server.com
+# Local Docker context (default)
+supactl config set-context local --provider=local
+supactl config use-context local
+
+# Remote SupaControl context
+supactl config set-context production --provider=remote --server=https://your-supacontrol.com --api-key=sk_...
+supactl config use-context production
 ```
 
-You'll be prompted to enter your API key (obtain this from your SupaControl dashboard).
-
-### 2. Create a New Instance
-
+Or use `login` for quick remote setup:
 ```bash
+supactl login https://your-supacontrol.com
+# Enter API key when prompted
+```
+
+### 2. Manage Instances
+Commands work in the current context:
+```bash
+# Create instance
 supactl create my-project
-```
 
-### 3. List Your Instances
-
-```bash
+# List instances
 supactl list
+# or kubectl-style
+supactl get instances
+
+# Start/Stop
+supactl start my-project
+supactl stop my-project
+
+# Details
+supactl describe instance my-project
+supactl logs my-project --lines=50
 ```
 
-### 4. Link Your Local Directory
-
+### 3. Local Mode Example
 ```bash
-cd /path/to/your/project
-supactl link
+supactl config use-context local
+supactl local add my-local-project  # Clones Supabase, sets up Docker
+supactl local start my-local-project
+# Access Studio at http://localhost:54323 (auto-assigned port)
 ```
 
-Select your project from the interactive list.
-
-### 5. Check Status
-
+### 4. Linking (Remote Mode)
 ```bash
-supactl status
-```
-
-## Commands
-
-### Authentication
-
-#### `supactl login <server_url>`
-
-Login to your SupaControl server.
-
-```bash
-supactl login https://supacontrol.example.com
-```
-
-- Prompts for API key (no echo for security)
-- Validates credentials before saving
-- Stores config in `~/.supacontrol/config.json` with 600 permissions
-
-#### `supactl logout`
-
-Logout from your SupaControl server.
-
-```bash
-supactl logout
-```
-
-Removes stored credentials.
-
-### Instance Management
-
-#### `supactl create <project-name>`
-
-Create a new Supabase instance.
-
-```bash
-supactl create my-new-project
-```
-
-**Project name requirements:**
-- Lowercase letters and numbers
-- May contain hyphens
-- Must start and end with an alphanumeric character
-
-Example valid names: `my-project`, `api-v2`, `test123`
-
-#### `supactl list`
-
-List all your Supabase instances.
-
-```bash
-supactl list
-```
-
-Displays a table with:
-- Project name
-- Status
-- Studio URL
-
-#### `supactl delete <project-name>`
-
-Delete a Supabase instance.
-
-```bash
-supactl delete my-project
-```
-
-**Warning**: This action is irreversible. You'll be asked to confirm before deletion.
-
-### Local Development Integration
-
-#### `supactl link`
-
-Link the current directory to a remote instance.
-
-```bash
-cd /path/to/your/project
-supactl link
-```
-
-- Presents an interactive selector with your available instances
-- Creates `.supacontrol/project` file in the current directory
-- Automatically adds `.supacontrol/` to `.gitignore` if present
-
-#### `supactl unlink`
-
-Unlink the current directory from its remote instance.
-
-```bash
-supactl unlink
-```
-
-Removes the `.supacontrol/project` file.
-
-#### `supactl status`
-
-Show details about the linked project.
-
-```bash
-supactl status
-```
-
-Displays:
-- Project name
-- Status
-- Studio URL
-- API URL
-- Kong URL
-- Anon key (if available)
-- Creation date
-
-**Note**: Requires the directory to be linked first.
-
-### Help & Information
-
-#### `supactl --help`
-
-Show help for all commands.
-
-```bash
-supactl --help
-```
-
-#### `supactl <command> --help`
-
-Show detailed help for a specific command.
-
-```bash
-supactl create --help
-```
-
-#### `supactl --version`
-
-Display the CLI version.
-
-```bash
-supactl --version
+cd ~/my-project
+supactl link  # Select from instances
+supactl status  # View linked details
 ```
 
 ## Configuration
 
-### Authentication Configuration
+Contexts are stored in `~/.supacontrol/config.json` (0600 permissions).
 
-Credentials are stored in `~/.supacontrol/config.json`:
-
+Example:
 ```json
 {
-  "server_url": "https://supacontrol.example.com",
-  "api_key": "your-api-key"
+  "current-context": "production",
+  "contexts": {
+    "local": { "provider": "local" },
+    "production": { "provider": "remote", "server_url": "https://...", "api_key": "sk_..." }
+  }
 }
 ```
 
-**Security**: This file has 600 permissions (read/write for user only).
+Legacy v1 format auto-migrates.
 
-### Project Linking
-
-When you link a directory, a `.supacontrol/project` file is created:
-
+### Context Commands
+```bash
+supactl config get-contexts     # List contexts
+supactl config use-context <name>  # Switch
+supactl config current-context   # Show active
+supactl config set-context <name> --provider=local|remote [options]  # Create/update
+supactl config delete-context <name>  # Remove
 ```
-your-project/
-└── .supacontrol/
-    └── project
-```
 
-This file contains the name of the linked project.
+## Commands
 
-## API Endpoints
+### Core Instance Management (Context-Aware)
+These work in local or remote contexts:
 
-`supactl` communicates with the following SupaControl API endpoints:
+- `supactl create <name>`: Create new instance
+  - Local: Clones Supabase repo, generates secrets, configures Docker
+  - Remote: Calls API to provision
+  - Name regex: `^[a-z0-9][a-z0-9_-]*$`
 
-- `GET /api/v1/auth/me` - Validate authentication
-- `GET /api/v1/instances` - List instances
-- `POST /api/v1/instances` - Create instance
-- `GET /api/v1/instances/<name>` - Get instance details
-- `DELETE /api/v1/instances/<name>` - Delete instance
+- `supactl list`: List instances (tabular)
+- `supactl delete <name>`: Delete instance (confirmation prompt)
+- `supactl start <name>`: Start instance
+- `supactl stop <name>`: Stop instance
+- `supactl restart <name>`: Restart instance
+- `supactl logs <name> [--lines=N]`: View recent logs
+
+### kubectl-Style Commands
+- `supactl get instances`: List in table format (alias: `list`)
+- `supactl describe instance <name>`: Detailed info (status, URLs, ports, etc.)
+
+### Local Subcommands
+Dedicated local management (ignores remote context):
+- `supactl local add <name>`: Create local project
+- `supactl local list`: List local projects/ports
+- `supactl local start <name>`: Start Docker services
+- `supactl local stop <name>`: Stop services
+- `supactl local remove <name>`: Remove from database (keeps files)
+
+### Linking & Status (Remote Mode)
+- `supactl link`: Link current dir to instance (creates `.supacontrol/project`)
+- `supactl unlink`: Remove link
+- `supactl status`: Show linked instance details (URLs, keys, etc.)
+
+### Authentication
+- `supactl login <server_url>`: Setup default remote context, prompt for API key
+- `supactl logout`: Clear credentials
+
+### Help & Version
+- `supactl --help`: All commands
+- `supactl <cmd> --help`: Specific help
+- `supactl --version`: Show version
 
 ## Examples
 
-### Complete Workflow
-
+### Full Local Workflow
 ```bash
-# Login
+supactl config use-context local
+supactl create dev-app  # Or: local add dev-app
+supactl get instances
+supactl start dev-app
+supactl describe instance dev-app  # Shows ports: API=54321, Studio=54323, etc.
+# Develop at http://localhost:54321
+supactl stop dev-app
+supactl delete dev-app
+```
+
+### Remote Workflow with Linking
+```bash
 supactl login https://supacontrol.example.com
-# Enter your API key when prompted
-
-# Create a new project
-supactl create my-awesome-app
-
-# List all projects
-supactl list
-
-# Link to local directory
-cd ~/projects/my-awesome-app
-supactl link
-# Select "my-awesome-app" from the list
-
-# Check project status
-supactl status
-
-# When done, delete the project
-supactl delete my-awesome-app
-# Confirm deletion
+supactl create prod-app
+cd ~/prod-app
+supactl link  # Select prod-app
+supactl status  # Shows remote URLs, anon key, etc.
+supactl get instances  # From any dir, uses link if present
 ```
 
-### Working with Multiple Instances
-
+### Multi-Context
 ```bash
-# Create multiple instances
-supactl create dev-environment
-supactl create staging-environment
-supactl create production-environment
-
-# List them all
-supactl list
-
-# Link different directories to different instances
-cd ~/projects/dev && supactl link    # Select dev-environment
-cd ~/projects/staging && supactl link # Select staging-environment
-cd ~/projects/prod && supactl link    # Select production-environment
+supactl config set-context dev --provider=remote --server=https://dev.example.com --api-key=sk_dev
+supactl config set-context staging --provider=remote --server=https://staging.example.com --api-key=sk_staging
+supactl config use-context dev
+supactl create dev-instance
+supactl config use-context staging
+supactl create staging-instance  # Independent
 ```
+
+## Local Mode Details
+
+- **Storage**: `~/.supascale_database.json` (0600 perms)
+- **Ports**: Auto-allocated (base 54321 + 1000 * project_index)
+  - API: base, DB: base+1, Studio: base+2, etc.
+- **Secrets**: Auto-generated (crypto/rand, HS256 JWT)
+- **Isolation**: Per-project Docker networks/containers
+- **Supersedes**: Legacy `supascale.sh` (compatible DB format)
+
+## Remote Mode Details
+
+- **Linking**: `.supacontrol/project` file (git-ignored)
+- **Auth**: Bearer token (API key), HTTPS required
+- **Validation**: `GET /api/v1/auth/me` on login
+
+## API Endpoints (SupaControl Server)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/v1/auth/me` | Validate API key |
+| GET | `/api/v1/instances` | List instances |
+| POST | `/api/v1/instances` | Create instance |
+| GET | `/api/v1/instances/{name}` | Get details |
+| DELETE | `/api/v1/instances/{name}` | Delete |
+| POST | `/api/v1/instances/{name}/start` | Start |
+| POST | `/api/v1/instances/{name}/stop` | Stop |
+| POST | `/api/v1/instances/{name}/restart` | Restart |
+| GET | `/api/v1/instances/{name}/logs?lines=N` | Get logs |
+
+All use `Authorization: Bearer <api_key>`.
 
 ## Troubleshooting
 
-### "You are not logged in" Error
+### Common Errors
+- **"Not logged in"**: Run `login` or `config set-context` with credentials.
+- **"Invalid context"**: Use `config get-contexts`; switch with `use-context`.
+- **"No project linked"** (status/link): Run `link` in project dir.
+- **Port conflicts** (local): Check `docker ps`; use `local remove` for cleanup.
+- **Auth failed**: Verify API key/server URL; test connectivity.
+- **Invalid name**: Use lowercase alphanum + hyphens, start/end alphanumeric.
 
-```bash
-Error: You are not logged in. Please run 'supactl login <server_url>' first.
-```
+### Logs & Debug
+- `supactl logs <name> --lines=100`
+- Set `SUPACTL_DEBUG=1` for verbose output.
+- Config location: `~/.supacontrol/config.json` (check perms).
 
-**Solution**: Run `supactl login <server_url>` to authenticate.
-
-### "No project linked" Error
-
-```bash
-Error: No project linked. Run 'supactl link' to get started.
-```
-
-**Solution**: Run `supactl link` in your project directory.
-
-### "Authentication failed" Error
-
-**Possible causes**:
-- Invalid API key
-- Incorrect server URL
-- Server is unreachable
-
-**Solution**:
-1. Verify your server URL is correct
-2. Obtain a fresh API key from your SupaControl dashboard
-3. Check network connectivity
-
-### Invalid Project Name
-
-```bash
-Error: Project name 'MyProject' is invalid.
-Name must be lowercase, alphanumeric, and may contain hyphens.
-```
-
-**Solution**: Use only lowercase letters, numbers, and hyphens. Example: `my-project`
+### Windows Notes
+- Paths use `%USERPROFILE%\.supacontrol\`
+- Docker requires WSL2 or Hyper-V.
+- No file perm enforcement (uses ACLs).
 
 ## Development
 
-### Building from Source
-
+### Build & Test
 ```bash
-# Clone the repository
-git clone <repository-url>
-cd supactl
-
-# Install dependencies
-go mod download
-
-# Build
-go build -o supactl
-
-# Run
-./supactl --help
+make build      # Current platform
+make build-all  # All platforms
+make test       # Unit tests
+make lint       # golangci-lint
+make test-coverage
 ```
 
 ### Project Structure
-
 ```
-supactl/
-├── cmd/                  # Cobra command definitions
-│   ├── root.go          # Root command
-│   ├── login.go         # Login command
-│   ├── logout.go        # Logout command
-│   ├── create.go        # Create instance command
-│   ├── list.go          # List instances command
-│   ├── delete.go        # Delete instance command
-│   ├── link.go          # Link directory command
-│   ├── unlink.go        # Unlink directory command
-│   └── status.go        # Show status command
+.
+├── cmd/          # Cobra commands
+│   ├── root.go
+│   ├── config.go, create.go, delete.go, ...
+│   └── local_*.go
 ├── internal/
-│   ├── api/             # API client
-│   │   ├── client.go   # HTTP client implementation
-│   │   └── types.go    # API types
-│   ├── auth/            # Authentication
-│   │   └── config.go   # Config management
-│   └── link/            # Local linking
-│       └── link.go     # Link file management
-├── main.go              # Application entry point
-└── go.mod               # Go module definition
+│   ├── api/      # Remote API client
+│   ├── auth/     # Config/auth
+│   ├── link/     # Project linking
+│   ├── local/    # Docker/local mgmt
+│   └── provider/ # Abstraction layer
+├── scripts/      # install.sh, uninstall.sh
+├── main.go
+├── Makefile
+├── go.mod
+└── ...
 ```
 
 ### Dependencies
+- Cobra (CLI)
+- Survey (prompts)
+- Standard lib (HTTP, JSON, crypto)
 
-- [Cobra](https://github.com/spf13/cobra) - CLI framework
-- [Survey](https://github.com/AlecAivazis/survey) - Interactive prompts
-- Go standard library
+### Testing
+- `go test ./...`
+- Cross-platform: `GOOS=windows go test ./...`
+- Coverage: `make test-coverage`
 
 ## Contributing
+See [CONTRIBUTING.md](CONTRIBUTING.md).
 
-Contributions are welcome! Please follow these guidelines:
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
+1. Fork & branch
+2. Implement + tests
+3. Lint & build
+4. PR with description
 
 ## License
-
-MIT License - Copyright (c) 2025 Qubit Quilt
+MIT - © 2025 Qubit Quilt. See [LICENSE](LICENSE).
 
 ## Acknowledgments
-
-- Built for [SupaControl](https://github.com/qubitquilt/supacontrol)
-- Powered by [Supabase](https://supabase.com/)
-- CLI framework by [Cobra](https://github.com/spf13/cobra)
+- [Supabase](https://supabase.com/)
+- [Cobra](https://github.com/spf13/cobra)
+- Community contributions
 
 ## Support
+- Issues: [GitHub](https://github.com/qubitquilt/supactl/issues)
+- Docs: This file + [README.md](README.md)
 
-For issues, questions, or contributions:
-- GitHub Issues: [repository-url/issues]
-- Documentation: [docs-url]
-
-## Constitution & Philosophy
-
-**User-Centric**: The CLI is intuitive and designed for humans. Clear commands, helpful error messages, and interactive prompts make it accessible.
-
-**Secure by Default**: API keys are never echoed, logged, or stored in world-readable files. All credentials use 600 permissions.
-
-**Self-Contained**: Single binary with no external runtime dependencies.
-
-**API-Driven**: The CLI is a client for the SupaControl server. All business logic lives on the server.
-
-**Unix Philosophy**: Each command does one thing well. Commands can be composed for complex workflows.
+---
+Made with ❤️ by Qubit Quilt
