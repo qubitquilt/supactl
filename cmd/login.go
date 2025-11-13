@@ -8,6 +8,7 @@ import (
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/qubitquilt/supactl/internal/api"
 	"github.com/qubitquilt/supactl/internal/auth"
+	"github.com/qubitquilt/supactl/internal/provider"
 	"github.com/spf13/cobra"
 )
 
@@ -47,8 +48,35 @@ Your credentials will be stored securely in ~/.supacontrol/config.json as the 'd
 			os.Exit(1)
 		}
 
-		// Save the configuration using legacy function (which creates/updates the 'default' context)
-		if err := auth.SaveLegacyConfig(serverURL, apiKey); err != nil {
+		// Save the configuration using new context management functions
+		config, err := auth.LoadConfig()
+		if err != nil {
+			// If config doesn't exist, create new one
+			config = &auth.Config{
+				CurrentContext: "default",
+				Contexts:       make(map[string]*auth.ContextConfig),
+			}
+		}
+
+		// Add/update default context
+		config.AddContext("default", &auth.ContextConfig{
+			Provider:  provider.ProviderTypeRemote,
+			ServerURL: serverURL,
+			APIKey:    apiKey,
+		})
+
+		// Ensure local context exists
+		if _, exists := config.Contexts["local"]; !exists {
+			config.Contexts["local"] = &auth.ContextConfig{Provider: provider.ProviderTypeLocal}
+		}
+
+		// Set current context to default
+		if err := config.SetCurrentContext("default"); err != nil {
+			fmt.Fprintf(os.Stderr, "Error: Failed to set current context: %v\n", err)
+			os.Exit(1)
+		}
+
+		if err := auth.SaveConfig(config); err != nil {
 			fmt.Fprintf(os.Stderr, "Error: Failed to save credentials: %v\n", err)
 			os.Exit(1)
 		}
