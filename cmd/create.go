@@ -13,29 +13,30 @@ var projectNameRegex = regexp.MustCompile(`^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9
 
 // createCmd represents the create command
 var createCmd = &cobra.Command{
-	Use:   "create <project-name>",
+	Use:   "create <instance-name>",
 	Short: "Create a new Supabase instance",
-	Long: `Create a new Supabase instance on your SupaControl server.
+	Long: `Create a new Supabase instance.
 
-The project name must be lowercase, alphanumeric, and may contain hyphens.
+This command works with remote contexts only. For local instances, use 'supactl local add'.
+The instance name must be lowercase, alphanumeric, and may contain hyphens.
 It must start and end with an alphanumeric character.`,
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		projectName := strings.TrimSpace(args[0])
+		instanceName := strings.TrimSpace(args[0])
 
 		// Validate project name
-		if !projectNameRegex.MatchString(projectName) {
-			fmt.Fprintf(os.Stderr, "Error: Project name '%s' is invalid.\n", projectName)
+		if !projectNameRegex.MatchString(instanceName) {
+			fmt.Fprintf(os.Stderr, "Error: Instance name '%s' is invalid.\n", instanceName)
 			fmt.Fprintf(os.Stderr, "Name must be lowercase, alphanumeric, and may contain hyphens.\n")
 			fmt.Fprintf(os.Stderr, "It must start and end with an alphanumeric character.\n")
 			os.Exit(1)
 		}
 
-		client := getAPIClient()
+		provider := getProvider()
 
-		fmt.Printf("Creating instance '%s'...\n", projectName)
+		fmt.Printf("Creating instance '%s'...\n", instanceName)
 
-		instance, err := client.CreateInstance(projectName)
+		instance, err := provider.CreateInstance(instanceName)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error: Failed to create instance: %v\n", err)
 			os.Exit(1)

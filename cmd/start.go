@@ -10,24 +10,25 @@ import (
 
 // startCmd represents the start command
 var startCmd = &cobra.Command{
-	Use:   "start <project-name>",
+	Use:   "start <instance-name>",
 	Short: "Start a Supabase instance",
-	Long: `Start a stopped Supabase instance on your SupaControl server.
+	Long: `Start a stopped Supabase instance.
 
-This command will start all containers associated with the instance.`,
+This command works with both remote and local instances based on your current context.
+Use 'supactl config use-context <name>' to switch between contexts.`,
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		projectName := strings.TrimSpace(args[0])
-		client := getAPIClient()
+		instanceName := strings.TrimSpace(args[0])
+		provider := getProvider()
 
-		fmt.Printf("Starting instance '%s'...\n", projectName)
+		fmt.Printf("Starting instance '%s'...\n", instanceName)
 
-		if err := client.StartInstance(projectName); err != nil {
+		if err := provider.StartInstance(instanceName); err != nil {
 			fmt.Fprintf(os.Stderr, "Error: Failed to start instance: %v\n", err)
 			os.Exit(1)
 		}
 
-		fmt.Printf("Successfully started instance '%s'\n", projectName)
+		fmt.Printf("Successfully started instance '%s'\n", instanceName)
 	},
 }
 

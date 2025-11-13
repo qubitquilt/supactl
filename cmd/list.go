@@ -12,13 +12,14 @@ import (
 var listCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List all Supabase instances",
-	Long: `List all Supabase instances managed by your SupaControl server.
+	Long: `List all Supabase instances managed by your current context.
 
-Displays a table with project name, status, and Studio URL for each instance.`,
+Displays a table with instance name, status, and Studio URL.
+Works with both remote and local instances based on your current context.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		client := getAPIClient()
+		provider := getProvider()
 
-		instances, err := client.ListInstances()
+		instances, err := provider.ListInstances()
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error: Failed to list instances: %v\n", err)
 			os.Exit(1)
@@ -26,14 +27,16 @@ Displays a table with project name, status, and Studio URL for each instance.`,
 
 		if len(instances) == 0 {
 			fmt.Println("No instances found.")
-			fmt.Println("Create your first instance with: supactl create <project-name>")
+			fmt.Printf("Create your first instance with:\n")
+			fmt.Printf("  - Remote: supactl create <instance-name> (after 'supactl login')\n")
+			fmt.Printf("  - Local:  supactl local add <instance-name>\n")
 			return
 		}
 
 		// Create a tabwriter for formatted output
 		w := tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
-		fmt.Fprintln(w, "PROJECT NAME\tSTATUS\tSTUDIO URL")
-		fmt.Fprintln(w, "------------\t------\t----------")
+		fmt.Fprintln(w, "INSTANCE NAME\tSTATUS\tSTUDIO URL")
+		fmt.Fprintln(w, "-------------\t------\t----------")
 
 		for _, instance := range instances {
 			fmt.Fprintf(w, "%s\t%s\t%s\n",

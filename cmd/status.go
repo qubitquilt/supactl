@@ -14,8 +14,10 @@ var statusCmd = &cobra.Command{
 	Short: "Show status of linked project",
 	Long: `Show detailed status and information about the linked project.
 
-This command requires the current directory to be linked to a project.
-Run 'supactl link' first if you haven't already.`,
+This command requires the current directory to be linked to a project (remote mode only).
+Run 'supactl link' first if you haven't already.
+
+Note: For a kubectl-style alternative, use 'supactl describe <instance-name>' instead.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		// Get the linked project name
 		projectName, err := link.GetLink()
@@ -24,10 +26,10 @@ Run 'supactl link' first if you haven't already.`,
 			os.Exit(1)
 		}
 
-		client := getAPIClient()
+		provider := getProvider()
 
 		// Fetch instance details
-		instance, err := client.GetInstance(projectName)
+		instance, err := provider.GetInstance(projectName)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error: Failed to get instance details: %v\n", err)
 			os.Exit(1)
@@ -47,8 +49,11 @@ Run 'supactl link' first if you haven't already.`,
 		if instance.AnonKey != "" {
 			fmt.Printf("  Anon Key:   %s\n", instance.AnonKey)
 		}
-		if instance.CreatedAt != "" {
-			fmt.Printf("  Created:    %s\n", instance.CreatedAt)
+		if instance.Directory != "" {
+			fmt.Printf("  Directory:  %s\n", instance.Directory)
+		}
+		if !instance.CreatedAt.IsZero() {
+			fmt.Printf("  Created:    %s\n", instance.CreatedAt.Format("2006-01-02 15:04:05"))
 		}
 
 		fmt.Println()

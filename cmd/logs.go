@@ -14,20 +14,21 @@ var (
 
 // logsCmd represents the logs command
 var logsCmd = &cobra.Command{
-	Use:   "logs <project-name>",
+	Use:   "logs <instance-name>",
 	Short: "View logs for a Supabase instance",
-	Long: `View logs for a Supabase instance on your SupaControl server.
+	Long: `View logs for a Supabase instance.
 
 This command retrieves and displays the recent logs from the instance containers.
+Works with both remote and local instances based on your current context.
 Use the --lines flag to control how many lines to display.`,
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		projectName := strings.TrimSpace(args[0])
-		client := getAPIClient()
+		instanceName := strings.TrimSpace(args[0])
+		provider := getProvider()
 
-		fmt.Printf("Fetching logs for instance '%s'...\n\n", projectName)
+		fmt.Printf("Fetching logs for instance '%s'...\n\n", instanceName)
 
-		logs, err := client.GetLogs(projectName, logLines)
+		logs, err := provider.GetLogs(instanceName, logLines)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error: Failed to fetch logs: %v\n", err)
 			os.Exit(1)

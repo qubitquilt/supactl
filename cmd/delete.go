@@ -11,23 +11,24 @@ import (
 
 // deleteCmd represents the delete command
 var deleteCmd = &cobra.Command{
-	Use:   "delete <project-name>",
+	Use:   "delete <instance-name>",
 	Short: "Delete a Supabase instance",
-	Long: `Delete a Supabase instance from your SupaControl server.
+	Long: `Delete a Supabase instance.
 
-WARNING: This action is irreversible. All data associated with the instance
-will be permanently deleted.
+WARNING: This action may be irreversible depending on your provider.
+For remote instances, all data will be permanently deleted.
+For local instances, only the database entry is removed (files remain).
 
 You will be asked to confirm before the deletion proceeds.`,
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		projectName := strings.TrimSpace(args[0])
-		client := getAPIClient()
+		instanceName := strings.TrimSpace(args[0])
+		provider := getProvider()
 
 		// Ask for confirmation
 		var confirmed bool
 		prompt := &survey.Confirm{
-			Message: fmt.Sprintf("Are you sure you want to delete '%s'? This action is irreversible.", projectName),
+			Message: fmt.Sprintf("Are you sure you want to delete '%s'?", instanceName),
 			Default: false,
 		}
 
@@ -41,14 +42,14 @@ You will be asked to confirm before the deletion proceeds.`,
 			return
 		}
 
-		fmt.Printf("Deleting instance '%s'...\n", projectName)
+		fmt.Printf("Deleting instance '%s'...\n", instanceName)
 
-		if err := client.DeleteInstance(projectName); err != nil {
+		if err := provider.DeleteInstance(instanceName); err != nil {
 			fmt.Fprintf(os.Stderr, "Error: Failed to delete instance: %v\n", err)
 			os.Exit(1)
 		}
 
-		fmt.Printf("Successfully deleted instance '%s'\n", projectName)
+		fmt.Printf("Successfully deleted instance '%s'\n", instanceName)
 	},
 }
 
