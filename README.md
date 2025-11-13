@@ -27,25 +27,46 @@ A comprehensive toolkit for managing self-hosted Supabase instances.
 curl -sSL https://raw.githubusercontent.com/qubitquilt/supactl/main/scripts/install.sh | bash
 ```
 
-### Remote Management (via SupaControl Server)
+### Context-Aware Management
+
+supactl uses kubectl-style contexts to switch between remote and local management:
 
 ```bash
-# Login to your SupaControl server
-supactl login https://your-supacontrol-server.com
+# Set up local context (Docker-based)
+supactl config set-context local --provider=local
+supactl config use-context local
 
-# Manage remote instances
-supactl create my-project
+# Set up remote context (SupaControl server)
+supactl config set-context production --provider=remote --server=https://your-supacontrol-server.com --api-key=sk_...
+supactl config use-context production
+```
+
+### Basic Usage
+
+```bash
+# List all contexts
+supactl config get-contexts
+
+# Create and manage instances (create only in remote; use 'local add' for local)
+supactl local add my-project
 supactl list
 supactl start my-project
+
+# kubectl-style commands
+supactl get instances
+supactl describe instance my-project
 ```
 
 ### Local Management (Direct Docker)
 
 ```bash
+# Switch to local context
+supactl config use-context local
+
 # Manage local instances directly with Docker
 supactl local add my-project
-supactl local list
-supactl local start my-project
+supactl list
+supactl start my-project
 ```
 
 **[Full supactl Documentation →](SUPACTL_README.md)**
@@ -53,7 +74,7 @@ supactl local start my-project
 ## 📋 Table of Contents
 
 - [Overview](#overview)
-- [Tools Comparison](#tools-comparison)
+- [Architecture](#architecture)
 - [Installation](#installation)
 - [Quick Examples](#quick-examples)
 - [Features](#features)
@@ -64,9 +85,17 @@ supactl local start my-project
 
 ## 🎯 Overview
 
-`supactl` is a unified, Go-based command-line interface for managing self-hosted Supabase instances in two modes:
+`supactl` is a unified, Go-based command-line interface for managing self-hosted Supabase instances using a context-aware architecture inspired by kubectl.
 
-### Remote Management (Server Mode)
+### Context-Aware Architecture
+
+Instead of separate command hierarchies, supactl uses contexts to switch between management modes:
+
+- **Unified Commands**: Same commands work across all contexts
+- **Seamless Switching**: Change contexts without learning new commands
+- **kubectl-style UX**: Familiar commands like `get`, `describe`, and `config`
+
+### Remote Management (SupaControl Server)
 
 Connect to a SupaControl management server for centralized control:
 
@@ -76,7 +105,7 @@ Connect to a SupaControl management server for centralized control:
 - **Team Collaboration**: Share and manage instances with your team
 - **Secure**: Encrypted credentials storage with proper permissions
 
-### Local Management (Direct Mode)
+### Local Management (Direct Docker)
 
 Manage instances directly on your local machine with Docker:
 
@@ -88,26 +117,28 @@ Manage instances directly on your local machine with Docker:
 
 Both modes are available in a **single binary** that works cross-platform on Linux, macOS, and Windows.
 
-## 🔄 Mode Comparison
+## 🏗️ Architecture
 
-| Feature | Remote Mode (`supactl`) | Local Mode (`supactl local`) | Legacy `supascale.sh` |
-|---------|---------|--------------|--------------|
-| **Architecture** | Client-Server | Standalone | Standalone |
-| **Best For** | Multi-server, team usage | Single machine, local dev | Legacy use only |
-| **Setup** | Requires SupaControl server | Just Docker | Just Docker |
-| **Remote Management** | ✅ Yes | ❌ No | ❌ No |
-| **API Integration** | ✅ Full REST API | ❌ N/A | ❌ N/A |
-| **Docker Required** | On server only | ✅ Locally | ✅ Locally |
-| **Cross-Platform** | ✅ Yes | ✅ Yes | Linux/macOS only |
-| **Interactive CLI** | ✅ Beautiful prompts | ✅ Beautiful prompts | Basic bash |
-| **Secrets Generation** | Server-side | ✅ Automated | ✅ Automated |
-| **Maintained** | ✅ Yes | ✅ Yes | 🔄 Legacy |
+### Context-Based Management
 
-**Use Remote Mode if:** You're managing multiple servers, working in a team, or want centralized control.
+```bash
+# View available contexts
+supactl config get-contexts
 
-**Use Local Mode if:** You're managing instances on a single machine or doing local development.
+# Switch between contexts
+supactl config use-context local        # Local Docker mode
+supactl config use-context production   # Remote SupaControl mode
 
-**Note:** `supascale.sh` is now superseded by `supactl local` which provides the same functionality with better cross-platform support, improved error handling, and a consistent CLI experience.
+# All commands work consistently across contexts
+supactl list          # Lists instances in current context
+supactl create myapp  # Creates remote instance (use 'local add' for local)
+```
+
+### kubectl-Style Commands
+
+- `supactl get instances` - List instances in table format
+- `supactl describe instance <name>` - Show detailed instance information
+- `supactl config *` - Manage contexts (get-contexts, use-context, set-context, etc.)
 
 ## 📦 Installation
 
@@ -177,82 +208,90 @@ make build
 sudo make install
 ```
 
-### Installing supascale.sh
-
-```bash
-git clone https://github.com/qubitquilt/supactl.git
-cd supactl
-chmod +x supascale.sh
-
-# Optional: Add to PATH
-sudo ln -s $(pwd)/supascale.sh /usr/local/bin/supascale
-```
-
-**Prerequisites for supascale.sh:**
-- Docker and Docker Compose
-- `jq` (JSON processor)
-- Bash shell environment
-- Supabase CLI
-
 ## 🎨 Quick Examples
 
-### Using supactl
+### Context Setup and Management
 
 ```bash
-# One-time login
-supactl login https://supacontrol.example.com
+# Set up local context for Docker-based management
+supactl config set-context local --provider=local
+supactl config use-context local
 
-# Create and manage instances
-supactl create production
-supactl create staging
-supactl list
+# Set up remote context for SupaControl server
+supactl config set-context production --provider=remote \
+  --server=https://supacontrol.example.com --api-key=sk_...
 
-# Link to local directory
+# List all contexts
+supactl config get-contexts
+```
+
+### Working with Instances
+
+```bash
+# Create remote instances (use 'local add' for local)
+supactl create my-project
+supactl create staging-environment
+
+# List instances with kubectl-style output
+supactl get instances
+
+# Get detailed information
+supactl describe instance my-project
+
+# Manage lifecycle
+supactl start my-project
+supactl stop my-project
+supactl restart my-project
+
+# View logs
+supactl logs my-project --lines 50
+```
+
+### Remote Mode with Project Linking
+
+```bash
+# Switch to remote context
+supactl config use-context production
+
+# Link local directory to remote instance
 cd ~/my-project
 supactl link
 supactl status
-
-# When done
-supactl delete staging
 ```
 
-### Using supascale.sh
+### Local Mode with Docker
 
 ```bash
-# Create instances
-./supascale.sh add production
-./supascale.sh add staging
+# Switch to local context
+supactl config use-context local
 
-# Manage lifecycle
-./supascale.sh start production
-./supascale.sh list
-./supascale.sh stop production
-
-# Cleanup
-./supascale.sh remove staging
+# Create and manage local instances
+supactl local add my-local-project
+supactl list
+supactl start my-local-project
 ```
 
 ## ✨ Features
 
 ### supactl Features
 
+- **Context-Aware Architecture**: Unified commands across remote and local modes
+- **kubectl-Style Commands**: Familiar commands like `get`, `describe`, and `config`
 - **Authentication & Configuration**: Secure login with API key authentication
-- **Instance Management**: Create, list, delete Supabase instances
-- **Local Project Linking**: Link development directories to remote instances
+- **Instance Management**: Create, list, delete, start, stop, and restart instances
+- **Local Project Linking**: Link development directories to remote instances (remote mode)
 - **Status Monitoring**: View detailed instance information
 - **Security**: Credentials stored with 600 permissions, no key echoing
 - **Cross-Platform**: Works on Linux, macOS, and Windows
 - **Single Binary**: No runtime dependencies
 
-### supascale.sh Features
+### Local Mode Features
 
-- **Easy Project Creation**: Automated setup with unique configurations
-- **Secure by Default**: Auto-generated passwords and secrets
-- **Port Management**: Intelligent automatic port allocation (base + 1000 per project)
-- **Container Management**: Start, stop, and manage Docker containers
-- **Configuration Management**: Centralized JSON-based storage
-- **Docker Integration**: Seamless docker-compose integration
-- **Update Mechanism**: Self-updating capability
+- **Docker Integration**: Direct docker-compose management
+- **Port Management**: Automatic unique port allocation
+- **Secrets Generation**: Auto-generated secure passwords and JWT tokens
+- **Project Isolation**: Each instance in separate Docker environment
+- **Quick Setup**: Automated Supabase project initialization
 
 ## 📚 Documentation
 
@@ -260,11 +299,9 @@ supactl delete staging
 
 - **[supactl Full Documentation](SUPACTL_README.md)** - Complete guide for the CLI tool
   - All commands and options
+  - Context management
   - API endpoints reference
-  - Configuration details
   - Troubleshooting guide
-
-- **[supascale.sh Guide](#supascalesh-detailed-guide)** - See below for bash script documentation
 
 ### API Documentation
 
@@ -275,6 +312,10 @@ supactl works with SupaControl servers that implement these endpoints:
 - `POST /api/v1/instances` - Create instance
 - `GET /api/v1/instances/<name>` - Get instance details
 - `DELETE /api/v1/instances/<name>` - Delete instance
+- `POST /api/v1/instances/<name>/start` - Start instance
+- `POST /api/v1/instances/<name>/stop` - Stop instance
+- `POST /api/v1/instances/<name>/restart` - Restart instance
+- `GET /api/v1/instances/<name>/logs` - Get logs
 
 ## 🛠 Development
 
@@ -316,98 +357,37 @@ go test -v ./internal/api
 ```
 .
 ├── cmd/                 # Cobra command definitions
-│   ├── create.go
-│   ├── delete.go
-│   ├── link.go
-│   ├── list.go
-│   ├── login.go
-│   ├── logout.go
-│   ├── status.go
-│   └── unlink.go
+│   ├── root.go         # Root command and context management
+│   ├── create.go       # Create instance command
+│   ├── delete.go       # Delete instance command
+│   ├── list.go         # List instances command
+│   ├── start.go        # Start instance command
+│   ├── stop.go         # Stop instance command
+│   ├── restart.go      # Restart instance command
+│   ├── logs.go         # View logs command
+│   ├── get.go          # kubectl-style get command
+│   ├── describe.go     # kubectl-style describe command
+│   ├── config.go       # Context management commands
+│   ├── link.go         # Link directory command (remote mode)
+│   ├── unlink.go       # Unlink directory command (remote mode)
+│   ├── status.go       # Show linked project status (remote mode)
+│   ├── local.go        # Local mode parent command
+│   ├── local_add.go    # Local: create new instance
+│   ├── local_list.go   # Local: list instances
+│   ├── local_start.go  # Local: start instance
+│   ├── local_stop.go   # Local: stop instance
+│   └── local_remove.go # Local: remove instance
 ├── internal/
 │   ├── api/            # API client implementation
-│   ├── auth/           # Authentication & config
-│   └── link/           # Local project linking
-├── .github/
-│   └── workflows/      # CI/CD pipelines
+│   ├── auth/           # Authentication & config management
+│   ├── provider/       # Context-aware provider interface
+│   ├── link/           # Local project linking
+│   └── local/          # Local instance management
+├── scripts/            # Installation and utility scripts
 ├── main.go
 ├── Makefile
-├── supascale.sh        # Bash management script
 └── README.md
 ```
-
-## supascale.sh Detailed Guide
-
-### Prerequisites
-
-- Docker and Docker Compose
-- `jq` (JSON processor)
-- Git
-- Bash shell environment
-- Sudo privileges (required for Docker operations)
-- Supabase CLI (must be in your PATH)
-
-### Available Commands
-
-```bash
-./supascale.sh [command] [options]
-```
-
-- `list` - Display all configured projects
-- `add <project_id>` - Create a new Supabase instance
-- `start <project_id>` - Start a specific project
-- `stop <project_id>` - Stop a specific project
-- `remove <project_id>` - Remove a project from configuration
-- `help` - Show help message
-
-### Configuration
-
-The script uses a central configuration file at `$HOME/.supascale_database.json`:
-
-```json
-{
-  "projects": {
-    "project-id": {
-      "directory": "/path/to/project",
-      "ports": {
-        "api": 54321,
-        "db": 54322,
-        "shadow": 54320,
-        "studio": 54323,
-        "inbucket": 54324,
-        "smtp": 54325,
-        "pop3": 54326,
-        "analytics": 54327,
-        "pooler": 54329,
-        "kong_https": 54764
-      }
-    }
-  },
-  "last_port_assigned": 54321
-}
-```
-
-### Port Allocation
-
-Base port starts at 54321 and increments by 1000 per project:
-
-- Shadow Port: Base - 1
-- API Port (Kong): Base
-- Database Port: Base + 1
-- Studio Port: Base + 2
-- Inbucket Port: Base + 3
-- SMTP Port: Base + 4
-- POP3 Port: Base + 5
-- Analytics Port: Base + 6
-- Pooler Port: Base + 8
-- Kong HTTPS Port: Base + 443
-
-### Security
-
-- Passwords generated using `/dev/urandom` (40 chars, alphanumeric)
-- Credentials stored in project-specific `.env` files
-- Each project isolated in Docker containers
-- JWT secrets auto-generated for Supabase
 
 ## 🤝 Contributing
 
@@ -459,6 +439,14 @@ See [LICENSE](LICENSE) for full details.
 
 ## 🗺️ Roadmap
 
+### Completed
+- [x] Context-aware multi-provider architecture (local Docker + remote SupaControl)
+- [x] kubectl-style commands (get instances, describe instance, config management)
+- [x] Local mode integration (direct Docker Compose management)
+- [x] Multi-context support (multiple remote servers + local)
+- [x] Secure local project linking (`.supacontrol/project` files)
+
+### Planned
 - [ ] Web UI for instance management
 - [ ] Instance templates and presets
 - [ ] Automated backups and restoration
@@ -466,6 +454,12 @@ See [LICENSE](LICENSE) for full details.
 - [ ] Instance monitoring and alerts
 - [ ] Database migration tools
 - [ ] Team collaboration features
+- [ ] Bash/Zsh completion scripts
+- [ ] Config file encryption at rest
+- [ ] Instance health checking
+- [ ] Bulk operations
+- [ ] Declarative management (apply -f)
+
 
 ## ⚡ Performance
 
@@ -476,4 +470,4 @@ See [LICENSE](LICENSE) for full details.
 
 ---
 
-<p align="center">Made with ❤️ by Qubit Quilt</p> 
+<p align="center">Made with ❤️ by Qubit Quilt</p>
