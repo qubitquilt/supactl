@@ -2,6 +2,7 @@ package provider
 
 import (
 	"fmt"
+	"net"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -59,12 +60,15 @@ func mapProjectToInstance(name string, project *local.Project) *Instance {
 
 // getHostIP attempts to get the host IP, defaulting to localhost
 func getHostIP() string {
-	output, err := exec.Command("hostname", "-I").Output()
-	if err == nil && len(output) > 0 {
-		// Take first IP
-		fields := strings.Fields(string(output))
-		if len(fields) > 0 {
-			return fields[0]
+	addrs, err := net.InterfaceAddrs()
+	if err != nil {
+		return "localhost"
+	}
+	for _, addr := range addrs {
+		if ipnet, ok := addr.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+			if ipnet.IP.To4() != nil {
+				return ipnet.IP.String()
+			}
 		}
 	}
 	return "localhost"
