@@ -47,8 +47,8 @@ supactl config use-context production
 # List all contexts
 supactl config get-contexts
 
-# Create and manage instances (works in both contexts)
-supactl create my-project
+# Create and manage instances (create only in remote; use 'local add' for local)
+supactl local add my-project
 supactl list
 supactl start my-project
 
@@ -64,7 +64,7 @@ supactl describe instance my-project
 supactl config use-context local
 
 # Manage local instances directly with Docker
-supactl create my-project
+supactl local add my-project
 supactl list
 supactl start my-project
 ```
@@ -131,7 +131,7 @@ supactl config use-context production   # Remote SupaControl mode
 
 # All commands work consistently across contexts
 supactl list          # Lists instances in current context
-supactl create myapp  # Creates instance in current context
+supactl create myapp  # Creates remote instance (use 'local add' for local)
 ```
 
 ### kubectl-Style Commands
@@ -228,7 +228,7 @@ supactl config get-contexts
 ### Working with Instances
 
 ```bash
-# Create instances (works in any context)
+# Create remote instances (use 'local add' for local)
 supactl create my-project
 supactl create staging-environment
 
@@ -266,7 +266,7 @@ supactl status
 supactl config use-context local
 
 # Create and manage local instances
-supactl create my-local-project
+supactl local add my-local-project
 supactl list
 supactl start my-local-project
 ```
@@ -460,13 +460,6 @@ See [LICENSE](LICENSE) for full details.
 - [ ] Bulk operations
 - [ ] Declarative management (apply -f)
 
-- [ ] Web UI for instance management
-- [ ] Instance templates and presets
-- [ ] Automated backups and restoration
-- [ ] Multi-region support
-- [ ] Instance monitoring and alerts
-- [ ] Database migration tools
-- [ ] Team collaboration features
 
 ## ⚡ Performance
 

@@ -139,11 +139,10 @@ supactl config delete-context <name>  # Remove
 ## Commands
 
 ### Core Instance Management (Context-Aware)
-These work in local or remote contexts:
+These work in local or remote contexts, but `create` is remote-only (use `local add` for local creation):
 
-- `supactl create <name>`: Create new instance
-  - Local: Clones Supabase repo, generates secrets, configures Docker
-  - Remote: Calls API to provision
+- `supactl create <name>`: Create new remote instance
+  - Remote: Calls API to provision. Local: Not supported; use `supactl local add <name>` instead.
   - Name regex: `^[a-z0-9][a-z0-9_-]*$`
 
 - `supactl list`: List instances (tabular)
@@ -184,7 +183,7 @@ Dedicated local management (ignores remote context):
 ### Full Local Workflow
 ```bash
 supactl config use-context local
-supactl create dev-app  # Or: local add dev-app
+supactl local add dev-app
 supactl get instances
 supactl start dev-app
 supactl describe instance dev-app  # Shows ports: API=54321, Studio=54323, etc.
