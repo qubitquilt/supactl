@@ -6,6 +6,7 @@ import (
 	"sort"
 
 	"github.com/qubitquilt/supactl/internal/auth"
+	"github.com/qubitquilt/supactl/internal/provider"
 	"github.com/spf13/cobra"
 )
 
@@ -141,13 +142,13 @@ Examples:
 		contextName := args[0]
 
 		// Validate provider
-		if setContextProvider != "local" && setContextProvider != "remote" {
-			fmt.Fprintf(os.Stderr, "Error: Provider must be 'local' or 'remote'\n")
+		if setContextProvider != provider.ProviderTypeLocal && setContextProvider != provider.ProviderTypeRemote {
+			fmt.Fprintf(os.Stderr, "Error: Provider must be '%s' or '%s'\n", provider.ProviderTypeLocal, provider.ProviderTypeRemote)
 			os.Exit(1)
 		}
 
 		// Validate remote context has required fields
-		if setContextProvider == "remote" && (setContextServer == "" || setContextAPIKey == "") {
+		if setContextProvider == provider.ProviderTypeRemote && (setContextServer == "" || setContextAPIKey == "") {
 			fmt.Fprintf(os.Stderr, "Error: Remote contexts require --server and --api-key flags\n")
 			os.Exit(1)
 		}
@@ -163,7 +164,7 @@ Examples:
 			Provider: setContextProvider,
 		}
 
-		if setContextProvider == "remote" {
+		if setContextProvider == provider.ProviderTypeRemote {
 			ctx.ServerURL = setContextServer
 			ctx.APIKey = setContextAPIKey
 		}
