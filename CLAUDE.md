@@ -24,19 +24,22 @@ The repository also includes `supascale.sh`, a legacy bash script now superseded
 ```
 supactl/
 ├── cmd/                      # Cobra command implementations
-│   ├── root.go              # Root command and shared utilities
-│   ├── login.go             # Remote: login to SupaControl server
-│   ├── logout.go            # Remote: logout/clear credentials
-│   ├── create.go            # Remote: create new instance
-│   ├── delete.go            # Remote: delete instance
-│   ├── list.go              # Remote: list all instances
-│   ├── start.go             # Remote: start stopped instance
-│   ├── stop.go              # Remote: stop running instance
-│   ├── restart.go           # Remote: restart instance
-│   ├── logs.go              # Remote: view instance logs
-│   ├── link.go              # Remote: link directory to instance
-│   ├── unlink.go            # Remote: unlink directory
-│   ├── status.go            # Remote: show linked instance details
+│   ├── root.go              # Root command and shared utilities (context-aware)
+│   ├── login.go             # Login to SupaControl server (creates 'default' context)
+│   ├── logout.go            # Logout/clear credentials
+│   ├── create.go            # Create new instance (context-aware)
+│   ├── delete.go            # Delete instance (context-aware)
+│   ├── list.go              # List all instances (context-aware)
+│   ├── start.go             # Start stopped instance (context-aware)
+│   ├── stop.go              # Stop running instance (context-aware)
+│   ├── restart.go           # Restart instance (context-aware)
+│   ├── logs.go              # View instance logs (context-aware)
+│   ├── get.go               # kubectl-style get instances command
+│   ├── describe.go          # kubectl-style describe instance command
+│   ├── config.go            # kubectl-style context management
+│   ├── link.go              # Link directory to instance (remote mode)
+│   ├── unlink.go            # Unlink directory
+│   ├── status.go            # Show linked instance details (context-aware)
 │   ├── local.go             # Local: parent command
 │   ├── local_add.go         # Local: create new local instance
 │   ├── local_list.go        # Local: list all local instances
@@ -50,8 +53,13 @@ supactl/
 │   │   ├── types.go         # Request/response types
 │   │   └── *_test.go        # API client tests
 │   ├── auth/                # Authentication and config management
-│   │   ├── config.go        # Config file I/O, credential storage
+│   │   ├── config.go        # Context-aware config file I/O
 │   │   └── *_test.go        # Auth tests
+│   ├── provider/            # Provider interface and implementations
+│   │   ├── provider.go      # InstanceProvider interface, unified types
+│   │   ├── remote.go        # RemoteProvider (wraps API client)
+│   │   ├── local.go         # LocalProvider (wraps local database)
+│   │   └── *_test.go        # Provider tests
 │   ├── link/                # Local project linking (remote mode)
 │   │   ├── link.go          # .supacontrol/project file management
 │   │   └── *_test.go        # Link tests
@@ -87,13 +95,25 @@ supactl/
 
 ## Architecture
 
+### Context-Aware Provider Pattern
+
+**supactl** implements a context-aware, multi-backend architecture inspired by `kubectl`:
+
+1. **Provider Interface** (`internal/provider/provider.go`): Defines the abstract contract for managing instances
+2. **Multiple Implementations**: `RemoteProvider` (API client) and `LocalProvider` (Docker)
+3. **Context Switching**: Users switch between providers using `supactl config use-context`
+4. **Unified Commands**: Single command set works with any provider (e.g., `supactl start` works for both local and remote)
+
+This design eliminates the need for separate command hierarchies (`supactl start` vs `supactl local start`) and provides a seamless developer experience.
+
 ### Command Pattern
 
 The CLI uses the **Cobra** framework for command structure:
 
 1. **Root Command** (`cmd/root.go`): Base command with shared utilities
 2. **Subcommands**: Each feature is a separate command file
-3. **Shared Helper**: `getAPIClient()` creates authenticated API client
+3. **Shared Helper**: `getProvider()` creates context-appropriate provider (replaces old `getAPIClient()`)
+4. **kubectl-style Commands**: Additional commands (`get`, `describe`, `config`) for familiar UX
 
 ### API Client
 
@@ -112,18 +132,65 @@ The API client (`client.go`) provides methods for all SupaControl server interac
 - Centralized error handling via `handleErrorResponse()`
 - Bearer token authentication in `Authorization` header
 
+### Provider Interface
+
+**Location**: `internal/provider/`
+
+The provider abstraction is the core of the context-aware architecture:
+
+**`provider.go`**:
+- `Instance`: Unified type for both remote and local instances
+- `InstanceProvider`: Interface defining all instance operations
+- Methods: `ListInstances()`, `GetInstance()`, `CreateInstance()`, `DeleteInstance()`, `StartInstance()`, `StopInstance()`, `RestartInstance()`, `GetLogs()`, `ProviderType()`
+
+**`remote.go`**:
+- `RemoteProvider`: Implements `InstanceProvider` for remote SupaControl API
+- Wraps `internal/api/client.go`
+- Maps `api.Instance` to unified `provider.Instance`
+
+**`local.go`**:
+- `LocalProvider`: Implements `InstanceProvider` for local Docker instances
+- Wraps `internal/local/` database functions
+- Maps `local.Project` to unified `provider.Instance`
+- Checks container status via `docker compose ps`
+
 ### Authentication & Configuration
 
 **Location**: `internal/auth/config.go`
 
-Configuration is stored in `~/.supacontrol/config.json` with **0600 permissions** (Unix) for security:
+Configuration is stored in `~/.supacontrol/config.json` with **0600 permissions** (Unix) for security.
 
+**New Context-Aware Format** (v2.0+):
+```json
+{
+  "current-context": "local",
+  "contexts": {
+    "local": {
+      "provider": "local"
+    },
+    "production": {
+      "provider": "remote",
+      "server_url": "https://supacontrol.example.com",
+      "api_key": "sk_..."
+    }
+  }
+}
+```
+
+**Legacy Format** (v1.x, auto-migrated):
 ```json
 {
   "server_url": "https://supacontrol.example.com",
   "api_key": "user-api-key"
 }
 ```
+
+**Key Functions**:
+- `LoadConfig()`: Loads config with automatic legacy format migration
+- `SaveConfig()`: Saves context-aware config
+- `GetCurrentContext()`: Returns active context configuration
+- `SetCurrentContext()`: Switches active context
+- `AddContext()`, `RemoveContext()`, `ListContexts()`: Context management
 
 **Cross-Platform Considerations**:
 - Unix: Uses `$HOME` environment variable
@@ -462,26 +529,103 @@ func init() {
 - Each project uses base port + 1000 increments
 - Check for existing Docker containers: `docker ps`
 
+## kubectl-Style Commands
+
+**supactl v2.0+** includes kubectl-inspired commands for users familiar with Kubernetes:
+
+### Context Management
+
+**`supactl config get-contexts`**: List all contexts
+```
+CURRENT   NAME       PROVIDER    SERVER
+*         local      local       -
+          production remote      https://api.example.com
+```
+
+**`supactl config use-context <name>`**: Switch context
+```bash
+supactl config use-context production
+```
+
+**`supactl config current-context`**: Show active context
+```bash
+supactl config current-context
+# Output: production
+```
+
+**`supactl config set-context <name>`**: Create/update context
+```bash
+# Local context
+supactl config set-context local --provider=local
+
+# Remote context
+supactl config set-context prod --provider=remote \
+  --server=https://api.example.com --api-key=sk_...
+```
+
+**`supactl config delete-context <name>`**: Delete context
+```bash
+supactl config delete-context staging
+```
+
+### Resource Commands
+
+**`supactl get instances`**: List instances (kubectl-style)
+```
+NAME         STATUS    STUDIO-URL
+my-project   running   http://localhost:54323
+api-prod     stopped   https://api.example.com/studio
+```
+
+**`supactl describe instance <name>`**: Show instance details
+```
+Name:           my-project
+Status:         running
+Studio URL:     http://localhost:54323
+API URL:        http://localhost:54321/rest/v1/
+Directory:      /home/user/projects/my-project
+DB Port:        54322
+Created:        2025-01-15 10:30:00
+```
+
+### Traditional Commands (Still Available)
+
+All traditional commands remain available and are context-aware:
+- `supactl list` (alias for `get instances`)
+- `supactl start <instance>` (works with current context)
+- `supactl stop <instance>` (works with current context)
+- `supactl logs <instance>` (works with current context)
+- `supactl create <instance>` (works with current context)
+- `supactl delete <instance>` (works with current context)
+
 ## Philosophy & Design Principles
 
 1. **User-Centric**: Clear error messages, helpful prompts, good defaults
-2. **Secure by Default**: Credentials never logged, files have restrictive permissions
-3. **Cross-Platform**: Works identically on Linux, macOS, and Windows
-4. **Self-Contained**: Single binary, no runtime dependencies
-5. **API-Driven**: All business logic lives on server, CLI is thin client
-6. **Unix Philosophy**: Each command does one thing well, composable
-7. **Fail Fast**: Exit on errors with clear messages, don't continue in invalid state
+2. **Context-Aware**: Seamless switching between local and remote backends via kubectl-style contexts
+3. **Secure by Default**: Credentials never logged, files have restrictive permissions
+4. **Cross-Platform**: Works identically on Linux, macOS, and Windows
+5. **Self-Contained**: Single binary, no runtime dependencies
+6. **Provider Abstraction**: Unified interface for multiple backends (remote API, local Docker)
+7. **kubectl UX**: Familiar commands for Kubernetes users
+8. **Unix Philosophy**: Each command does one thing well, composable
+9. **Fail Fast**: Exit on errors with clear messages, don't continue in invalid state
 
 ## Future Enhancements
 
+### Completed (v2.0)
+- [x] Context-aware provider architecture
+- [x] kubectl-style commands (get, describe, config)
+- [x] Multi-context support (local + multiple remote servers)
+
+### Planned
 - [ ] Bash/Zsh completion scripts
 - [ ] Config file encryption at rest
-- [ ] Support for multiple server profiles
 - [ ] Instance health checking
 - [ ] Bulk operations (create/delete multiple instances)
 - [ ] Instance import/export
 - [ ] Plugin system for extensions
 - [ ] TUI (terminal UI) mode
+- [ ] Declarative management (apply -f instance.yaml) - Requires server-side POST /api/v1/apply endpoint
 
 ## License
 
@@ -489,6 +633,28 @@ MIT License - See LICENSE file for full text. Copyright (c) 2025 Qubit Quilt.
 
 ---
 
-**Last Updated**: 2025-11-07
-**Version**: 1.0.0
+**Last Updated**: 2025-11-13
+**Version**: 2.0.0
 **Maintained By**: Qubit Quilt
+
+---
+
+## Architectural Roadmap Implementation
+
+This codebase implements the **Context-Aware Provider Architecture** as described in the strategic roadmap:
+
+- **Milestone 1 (Completed)**: Context-Aware Refactor
+  - ✅ InstanceProvider interface
+  - ✅ Context-aware config structure
+  - ✅ RemoteProvider and LocalProvider implementations
+  - ✅ Provider factory in root.go
+  - ✅ Unified commands using provider interface
+
+- **Milestone 2 (Completed)**: kubectl Command Alignment
+  - ✅ `get instances` command
+  - ✅ `describe instance <name>` command
+  - ✅ `config` subcommands (get-contexts, use-context, set-context, delete-context, current-context)
+
+- **Milestone 3 (Future)**: Declarative Management
+  - ⏳ Server-side POST /api/v1/apply endpoint (requires SupaControl changes)
+  - ⏳ CLI-side `apply -f instance.yaml` command

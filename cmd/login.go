@@ -18,7 +18,7 @@ var loginCmd = &cobra.Command{
 	Long: `Login to your SupaControl server by providing your server URL and API key.
 
 The API key can be obtained from your SupaControl dashboard.
-Your credentials will be stored securely in ~/.supacontrol/config.json.`,
+Your credentials will be stored securely in ~/.supacontrol/config.json as the 'default' context.`,
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		serverURL := strings.TrimRight(args[0], "/")
@@ -47,13 +47,14 @@ Your credentials will be stored securely in ~/.supacontrol/config.json.`,
 			os.Exit(1)
 		}
 
-		// Save the configuration
-		if err := auth.SaveConfig(serverURL, apiKey); err != nil {
+		// Save the configuration using legacy function (which creates/updates the 'default' context)
+		if err := auth.SaveLegacyConfig(serverURL, apiKey); err != nil {
 			fmt.Fprintf(os.Stderr, "Error: Failed to save credentials: %v\n", err)
 			os.Exit(1)
 		}
 
 		fmt.Printf("Successfully logged in to %s\n", serverURL)
+		fmt.Printf("Context 'default' is now active.\n")
 	},
 }
 
