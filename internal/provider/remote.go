@@ -25,6 +25,10 @@ func mapAPIInstanceToInstance(apiInstance *api.Instance) *Instance {
 	if apiInstance.CreatedAt != "" {
 		// Try RFC3339 format first
 		t, err := time.Parse(time.RFC3339, apiInstance.CreatedAt)
+		if err != nil {
+			// Try alternative format
+			t, err = time.Parse("2006-01-02 15:04:05", apiInstance.CreatedAt)
+		}
 		if err == nil {
 			createdAt = t
 		}
